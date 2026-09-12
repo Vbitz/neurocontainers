@@ -7,6 +7,7 @@ copyright:
     url: https://github.com/rordenlab/dcm2niix/blob/master/license.txt
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   openrecon_server_commit: "33362f2139701fbf5ea855808a325eb59b7db2ae"
