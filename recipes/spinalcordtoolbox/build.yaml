@@ -5,6 +5,7 @@ copyright:
     url: https://github.com/spinalcordtoolbox/spinalcordtoolbox/blob/master/LICENSE
 architectures:
   - x86_64
+  - aarch64
 options:
   gpu:
     description: Install SCT with CUDA-enabled PyTorch
@@ -83,6 +84,9 @@ build:
         - tar -xz -C /opt/ -f {{ get_file("downloaded_tar_file") }}
         - mv /opt/spinalcordtoolbox-{{ context.upstream_version }} /opt/spinalcordtoolbox-{{ context.install_version }}
     - workdir: /opt/spinalcordtoolbox-{{ context.install_version }}
+    - condition: arch == "aarch64"
+      run:
+        - sed -i 's/Miniforge3-Linux-x86_64.sh/Miniforge3-Linux-aarch64.sh/' install_sct
     - run:
         - chmod a+rwx /opt/spinalcordtoolbox-{{ context.install_version }}/ -R
     - user: spinalcordtoolbox
