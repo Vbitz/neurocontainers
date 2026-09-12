@@ -10,6 +10,7 @@ copyright:
     url: https://github.com/astewartau/qsmbly/blob/main/LICENSE
 
 architectures:
+  - aarch64
   - x86_64
 
 auto_update:
