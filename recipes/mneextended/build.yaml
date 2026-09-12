@@ -248,6 +248,7 @@ files:
       - pyqt
       - pyvista
       - pyvistaqt
+      - "trame-client<4"
       - hdf5
       - mne-icalabel
 - name: code
