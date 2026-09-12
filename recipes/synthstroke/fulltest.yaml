@@ -20,4 +20,4 @@ tests:
     PY
     synthstroke --input test_input.nii.gz --outdir test_output/baseline
   validate:
-    - output_exists: ${output_dir}/baseline/prediction_lesion_mask.nii.gz
+    - output_exists: test_output/baseline/prediction_lesion_mask.nii.gz
