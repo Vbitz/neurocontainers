@@ -6,6 +6,15 @@ copyright:
     url: https://github.com/mne-tools/mne-bids-pipeline/blob/main/LICENSE.txt
 architectures:
   - x86_64
+  - aarch64
+
+variables:
+  vscode_installer:
+    try:
+      - value: download
+        condition: arch == "x86_64"
+      - value: download_arm64
+        condition: arch == "aarch64"
 
 auto_update:
   method: github_release
@@ -56,7 +65,7 @@ build:
         conda_install: mne={{ context.version }} python=3.13
 
     - run:
-        - cp {{ get_file("download") }} vscode.deb
+        - cp {{ get_file(context.vscode_installer) }} vscode.deb
         - apt install ./vscode.deb
         - rm -rf ./vscode.deb
 
@@ -122,6 +131,8 @@ files:
     url: https://github.com/mne-tools/mne-bids-pipeline/archive/refs/heads/main.tar.gz
   - name: download
     url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+  - name: download_arm64
+    url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64
   - name: code
     contents: |-
       #!/usr/bin/env sh
