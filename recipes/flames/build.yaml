@@ -2,6 +2,12 @@ variables:
   model_commit: ea055aec0f55baa15d984c4fe92035aaa21c7b5c
   hdbet_commit: ae160681324d524db3578e4135bf781f8206e146
   nnunetv2_version: 2.8.1
+  miniforge_installer:
+    try:
+      - value: Miniforge3_Linux_x86_64_sh
+        condition: arch == "x86_64"
+      - value: Miniforge3_Linux_aarch64_sh
+        condition: arch == "aarch64"
 
 name: flames
 version: 1.0.0
@@ -10,6 +16,7 @@ copyright:
     url: https://huggingface.co/spaces/FrancescoLR/FLAMeS/tree/main
 architectures:
   - x86_64
+  - aarch64
 auto_update:
   method: sources
   local: []
@@ -41,6 +48,9 @@ build:
     - file:
         name: Miniforge3_Linux_x86_64_sh
         url: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+    - file:
+        name: Miniforge3_Linux_aarch64_sh
+        url: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh
     # --- FLAMeS nnU-Netv2 model weights (Dataset004_WML) ---
     - file:
         name: flames_model_zip
@@ -73,8 +83,8 @@ build:
     - workdir: /opt
     # --- conda env ---
     - run:
-        - cp {{ get_file("Miniforge3_Linux_x86_64_sh") }} Miniforge3-Linux-x86_64.sh
-        - bash Miniforge3-Linux-x86_64.sh -b -p /opt/miniforge3
+        - cp {{ get_file(context.miniforge_installer) }} Miniforge3.sh
+        - bash Miniforge3.sh -b -p /opt/miniforge3
         - /opt/miniforge3/bin/conda create -y -n flames python=3.11
     - environment:
         PATH: /opt/miniforge3/envs/flames/bin:/opt/flames/bin:${PATH}
