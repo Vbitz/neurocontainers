@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   julia_version: 1.12.6
@@ -22,6 +23,12 @@ variables:
   # Use the same portable target for packages, workload tracing and the sysimage
   # so native AVX-512 intrinsics cannot leak into its baseline machine code.
   sysimage_cpu_target: generic
+  julia_archive:
+    try:
+      - value: julia_linux_x86_64_tar_gz
+        condition: arch == "x86_64"
+      - value: julia_linux_aarch64_tar_gz
+        condition: arch == "aarch64"
 
 auto_update:
   method: github_release
@@ -74,7 +81,7 @@ build:
     # backslash escapes parentheses when it records the run command into
     # /.reproenv.json, which leaves invalid JSON behind in the image.
     - run:
-        - tar -xzf {{ get_file("julia_linux_x86_64_tar_gz") }} -C /opt
+        - tar -xzf {{ get_file(context.julia_archive) }} -C /opt
         - julia --startup-file=no --cpu-target={{ context.sysimage_cpu_target }} /opt/install_packages.jl
         - julia --startup-file=no --cpu-target={{ context.sysimage_cpu_target }} /opt/build_sysimage.jl
         - rm -f /opt/build_sysimage.jl /opt/precompile_workload.jl
@@ -107,6 +114,9 @@ deploy:
 files:
   - name: julia_linux_x86_64_tar_gz
     url: https://julialang-s3.julialang.org/bin/linux/x64/{{ context.julia_series }}/julia-{{ context.julia_version }}-linux-x86_64.tar.gz
+
+  - name: julia_linux_aarch64_tar_gz
+    url: https://julialang-s3.julialang.org/bin/linux/aarch64/{{ context.julia_series }}/julia-{{ context.julia_version }}-linux-aarch64.tar.gz
 
   - name: install_packages.jl
     contents: |
