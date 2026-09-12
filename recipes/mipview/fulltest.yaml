@@ -7,3 +7,7 @@ tests:
 - name: MipView version
   command: python -c "from importlib.metadata import version; print(version('MipView'))"
   expected_output_contains: ${version}
+- name: MipView package import and NIfTI dependency
+  command: >-
+    python -c "import nibabel as nib, numpy as np, mipview; image = nib.Nifti1Image(np.zeros((2, 2, 2), dtype=np.float32), np.eye(4)); print(mipview.__file__); print(image.shape)"
+  expected_output_contains: "(2, 2, 2)"
