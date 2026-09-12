@@ -135,6 +135,7 @@ build:
         mamba: "true"
         yaml_file: /opt/mne-extended.yml
     - run:
+        - /opt/miniconda/envs/mne-extended/bin/python -m pip install --no-cache-dir pyedflib==0.1.42
         - /opt/miniconda/envs/mne-extended/bin/python -c "import autoreject; import mne; import mne_bids; import mnelab"
         - /opt/miniconda/envs/mne-extended/bin/python -m pip check
         - cp {{ get_file(context.vscode_installer) }} vscode.deb
@@ -230,7 +231,6 @@ files:
       - pybv
       - scikit-learn
       - pyxdf
-      - pyEDFlib
       - neurokit2
       - autoreject={{ context.autoreject_version }}
       - coloredlogs
