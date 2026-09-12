@@ -16,6 +16,8 @@ variables:
   openrecon_ismrmrd_version: "1.14.2"
   upstream_version: "9.17.0"
   model_revision: e7c66cece159dc163885afd6165f582769dc5f29
+  dcm2niix_version: v1.0.20240202
+  dcm2niix_source_dir: dcm2niix-1.0.20240202
   qsmxt_tarball:
     try:
       - value: qsmxt_x86_64_tar_gz
@@ -80,6 +82,13 @@ build:
         - python-is-python3
         - python3-pip
 
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - cmake
+        - libopenjp2-7-dev
+        - zlib1g-dev
+
     - variables:
         openrecon_ubuntu_version: "24.04"
 
@@ -89,7 +98,19 @@ build:
 
     - run:
         - tar -xzf {{ get_file(context.qsmxt_tarball) }} -C /opt/qsmxt
-        - chmod +x /opt/qsmxt/qsmxt /opt/qsmxt/dcm2niix
+        - chmod +x /opt/qsmxt/qsmxt
+
+    - condition: arch == "x86_64"
+      run:
+        - chmod +x /opt/qsmxt/dcm2niix
+
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("dcm2niix_source_archive") }} -C /tmp
+        - cmake -S /tmp/{{ context.dcm2niix_source_dir }} -B /tmp/dcm2niix-build -DCMAKE_BUILD_TYPE=Release -DUSE_OPENJPEG=ON -DZLIB_IMPLEMENTATION=Cloudflare
+        - cmake --build /tmp/dcm2niix-build --parallel
+        - install -m 755 /tmp/dcm2niix-build/bin/dcm2niix /opt/qsmxt/dcm2niix
+        - rm -rf /tmp/{{ context.dcm2niix_source_dir }} /tmp/dcm2niix-build
 
     - run:
         - mkdir -p /opt/qsmxt/models
@@ -224,6 +245,8 @@ files:
     url: https://github.com/QSMxT/QSMxT/releases/download/v{{ context.upstream_version }}/qsmxt-v{{ context.upstream_version }}-x86_64-unknown-linux-gnu.tar.gz
   - name: qsmxt_aarch64_tar_gz
     url: https://github.com/QSMxT/QSMxT/releases/download/v{{ context.upstream_version }}/qsmxt-v{{ context.upstream_version }}-aarch64-unknown-linux-gnu.tar.gz
+  - name: dcm2niix_source_archive
+    url: https://github.com/rordenlab/dcm2niix/archive/refs/tags/{{ context.dcm2niix_version }}.tar.gz
   - name: models.sha256
     filename: models.sha256
   - name: bfrnet.onnx
