@@ -7,7 +7,7 @@
 
 name: globus
 globus_version: "3.2.8"
-version: "${globus_version}"
+version: "3.2.8"
 
 globus_dir: /opt/globusconnectpersonal-${version}
 toolkit_dir: test_output/globus-toolkit
