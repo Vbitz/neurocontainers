@@ -8,6 +8,7 @@ copyright:
     url: https://github.com/liamchalcroft/SynthStroke/blob/main/LICENSE
 architectures:
   - x86_64
+  - aarch64
 structured_readme:
   description: |-
     Implementation of "Synthetic Data for Robust Stroke Segmentation" (MELBA 2025). Uses synthetic data to improve stroke lesion segmentation across different imaging protocols and patient populations.
@@ -189,6 +190,7 @@ build:
         name: miniconda
         version: py310_25.5.1-0
         install_path: /opt/miniconda-latest
+        arch: "{{ arch }}"
         conda_install: python=3.10
         pip_install: monai torch nibabel numpy scikit-image tqdm wandb cornucopia huggingface_hub safetensors scipy einops
     - install: git libgl1 curl ca-certificates
