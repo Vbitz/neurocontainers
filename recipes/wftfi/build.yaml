@@ -20,7 +20,7 @@ auto_update:
 
 build:
   kind: neurodocker
-  base-image: ubuntu:16.04
+  base-image: ubuntu:18.04
   pkg-manager: apt
 
   directives:
