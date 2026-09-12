@@ -49,14 +49,8 @@ build:
         # CUDA wheels: these are GPU inference tools and the default index
         # already resolves to CUDA builds, so pin the index explicitly rather
         # than letting the resolver choose a different one on a rebuild.
-        - |
-          if [ "$(dpkg --print-architecture)" = "arm64" ]; then
-            . "${VENV}/bin/activate" && python -m pip install --no-cache-dir
-              "torch==2.5.1" --index-url https://download.pytorch.org/whl/cpu
-          else
-            . "${VENV}/bin/activate" && python -m pip install --no-cache-dir
-              --extra-index-url https://download.pytorch.org/whl/cu124 torch
-          fi
+        - >-
+          if [ "$(dpkg --print-architecture)" = "arm64" ]; then . "${VENV}/bin/activate" && python -m pip install --no-cache-dir "torch==2.5.1" --index-url https://download.pytorch.org/whl/cpu; else . "${VENV}/bin/activate" && python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cu124 torch; fi
         - . "${VENV}/bin/activate" && python -m pip install --no-cache-dir "deep_quality_estimation=={{ context.version }}"
         # Import at build time so a broken resolve fails here rather than on
         # first use; read the version from distribution metadata because these
