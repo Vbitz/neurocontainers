@@ -5,4 +5,7 @@ tests:
 - name: test datalad version
   description: Verify the container runtime smoke test for this tool.
   command: |
-    datalad --version
+    set -eu
+    output="$(datalad --version)"
+    printf '%s\n' "${output}"
+    printf '%s\n' "${output}" | grep -F datalad
