@@ -82,7 +82,7 @@ build:
         - rm -rf /tmp/bun-linux-aarch64
         - export PATH="/root/.cargo/bin:$PATH" && cd /opt/bidsvue && bun install --frozen-lockfile
         - export PATH="/root/.cargo/bin:$PATH" && cd /opt/bidsvue && bun tauri build --no-bundle
-        - install -m 0755 /opt/bidsvue/src-tauri/target/release/bidsvue /usr/local/bin/bidsvue
+        - install -m 0755 /opt/bidsvue/src-tauri/target/release/bidsvue /usr/bin/bidsvue
         - mkdir -p /tmp/bidsvue/cache /tmp/bidsvue/config /tmp/bidsvue/data
         - chmod -R a+rwx /tmp/bidsvue
 
