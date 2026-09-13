@@ -1,6 +1,13 @@
 variables:
   debian_security_snapshot: 20260901T000000Z
-  package_version: 0.6.4-1
+  sigviewer_amd64_version: 0.6.4-1
+  sigviewer_arm64_version: 0.6.4-1
+  package_version:
+    try:
+      - value: "{{ context.sigviewer_amd64_version }}"
+        condition: arch=="x86_64"
+      - value: "{{ context.sigviewer_arm64_version }}"
+        condition: arch=="aarch64"
 
 name: sigviewer
 version: 0.6.4.post1
@@ -11,19 +18,28 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
   local: []
   sources:
-  - id: sigviewer
+  - id: sigviewer-amd64
     method: apt
     package: sigviewer
     urls:
     - https://deb.debian.org/debian/dists/bullseye/main/binary-amd64/Packages.xz
     target:
-      variable: package_version
-      fulltest_variable: package_version
+      variable: sigviewer_amd64_version
+      fulltest_variable: sigviewer_amd64_version
+  - id: sigviewer-arm64
+    method: apt
+    package: sigviewer
+    urls:
+    - https://deb.debian.org/debian/dists/bullseye/main/binary-arm64/Packages.xz
+    target:
+      variable: sigviewer_arm64_version
+      fulltest_variable: sigviewer_arm64_version
 
 build:
   kind: neurodocker
