@@ -14,6 +14,8 @@
 
 name: code
 version: "240320"
+vscode_amd64_version: "1.136.1"
+vscode_arm64_version: "1.136.1"
 
 required_files:
   - dataset: ds000001
