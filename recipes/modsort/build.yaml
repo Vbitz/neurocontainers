@@ -65,6 +65,10 @@ build:
         - xdg-utils
         - xvfb
         - zlib1g
+        # The AppImage runtime itself links against the unversioned zlib
+        # development linker name while extracting. Runtime zlib alone only
+        # provides libz.so.1 on Ubuntu ARM64.
+        - zlib1g-dev
 
     # Upstream publishes a prebuilt Linux AppImage per release, so the container
     # needs no node/npm toolchain to build the app from source.
