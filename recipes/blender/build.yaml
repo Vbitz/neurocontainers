@@ -59,6 +59,7 @@ build:
     - condition: arch == "aarch64"
       install:
         - autoconf
+        - autopoint
         - automake
         - bison
         - libasound2-dev
