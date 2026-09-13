@@ -2,6 +2,7 @@ variables:
   upstream_version: 1.1.0
   upstream_tag: v1.1.0
   hdbet_version: '1.1'
+  dcm2niix_source_commit: e2ead4b3c3b6d9763ca17638c10e3b407bf3f21d
 
 name: lstai
 version: 1.1.0
@@ -10,6 +11,7 @@ copyright:
     url: https://github.com/CompImg/LST-AI/blob/main/LICENSE
 architectures:
   - x86_64
+  - aarch64
 auto_update:
   method: sources
   container_version: upstream
@@ -45,6 +47,11 @@ build:
   pkg-manager: apt
   directives:
     - install: ca-certificates git python3 python3-venv unzip libgomp1
+    - condition: arch == "aarch64"
+      install:
+        - cmake
+        - g++
+        - make
     - run:
         - python3 -m venv /opt/venv
     - environment:
@@ -66,8 +73,21 @@ build:
         - chmod a+x /opt/lstai/LST_AI/binaries/greedy
         - cp {{ get_file("lst") }} /opt/venv/bin/lst
         - chmod a+x /opt/venv/bin/lst
+    - condition: arch == "x86_64"
+      run:
         - unzip {{ get_file("dcm2niix_lnx_zip") }} -d /opt/dcm2niix
         - chmod a+x /opt/dcm2niix/dcm2niix
+    - condition: arch == "aarch64"
+      workdir: /tmp
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("dcm2niix_source_tar_gz") }}
+        - cmake -S /tmp/dcm2niix-{{ context.dcm2niix_source_commit }}/console -B /tmp/dcm2niix-build -DCMAKE_BUILD_TYPE=Release
+        - cmake --build /tmp/dcm2niix-build --parallel
+        - mkdir -p /opt/dcm2niix
+        - cp /tmp/dcm2niix-build/dcm2niix /opt/dcm2niix/
+        - chmod a+x /opt/dcm2niix/dcm2niix
+        - rm -rf /tmp/dcm2niix-{{ context.dcm2niix_source_commit }} /tmp/dcm2niix-build
     - test:
         name: Simple Deploy Bins/Path Test
         builtin: test_deploy.sh
@@ -92,6 +112,11 @@ files:
   - name: dcm2niix_lnx_zip
     url: https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20240202/dcm2niix_lnx.zip
     sha256: 269debc463857a999a9b48f677218dae287b58f5300f161d7fad284116a6321b
+    condition: arch == "x86_64"
+  - name: dcm2niix_source_tar_gz
+    url: https://github.com/rordenlab/dcm2niix/archive/{{ context.dcm2niix_source_commit }}.tar.gz
+    sha256: 30eb7ac3e0c594166eb333b9b8fd79276114d13c2a4b2ea3aeac0bd6c84f18d2
+    condition: arch == "aarch64"
   - name: 0_model
     url: https://zenodo.org/record/2540695/files/0.model?download=1
     sha256: 6f75233753c4750672815e2b7a86db754995ae44b8f1cd77bccfc37becd2d83c
