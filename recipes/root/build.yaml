@@ -18,7 +18,7 @@ build:
   kind: neurodocker
 
   base-image: "{% if context.arch == 'aarch64' %}rootproject/root:{{ context.version }}-conda{% else %}rootproject/root:{{ context.version }}-ubuntu22.04{% endif %}"
-  pkg-manager: yum
+  pkg-manager: "{{ 'yum' if arch == 'x86_64' else 'apt' }}"
 
   directives: []
 
