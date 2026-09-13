@@ -62,6 +62,8 @@ build:
         - automake
         - bison
         - libtool
+        - libpipewire-0.3-dev
+        - libpulse-dev
         - meson
         - ninja-build
         - patchelf
