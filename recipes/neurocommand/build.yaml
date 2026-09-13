@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 categories:
   - workflows
@@ -15,10 +16,8 @@ icon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABKCAYAAAAL8lK4AAAACXBI
 
 variables:
   base_image_digest: sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
-  apptainer_deb_url:
-    try:
-      - value: "https://github.com/apptainer/apptainer/releases/download/v1.4.4/apptainer_1.4.4_amd64.deb"
-        condition: arch == "x86_64"
+  apptainer_version: 1.4.4
+  go_version: 1.23.6
 
 auto_update:
   method: sources
@@ -70,6 +69,18 @@ build:
         - tree
         - sudo
 
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - libseccomp-dev
+        - fakeroot
+        - cryptsetup
+        - tzdata
+        - dh-apparmor
+        - git
+        - libsubid-dev
+        - pkg-config
+
     # Install CVMFS from official repository
     - run:
         - cp {{ get_file("cvmfs_release_latest_all_deb") }} cvmfs-release-latest_all.deb
@@ -82,12 +93,39 @@ build:
     # Install Apptainer from deb package
     - file:
         name: apptainer.deb
-        url: "{{ context.apptainer_deb_url }}"
+        url: "https://github.com/apptainer/apptainer/releases/download/v{{ context.apptainer_version }}/apptainer_{{ context.apptainer_version }}_amd64.deb"
+      condition: arch == "x86_64"
+
+    - file:
+        name: apptainer-src.tar.gz
+        url: "https://github.com/apptainer/apptainer/releases/download/v{{ context.apptainer_version }}/apptainer-{{ context.apptainer_version }}.tar.gz"
+      condition: arch == "aarch64"
+
+    - file:
+        name: go.tar.gz
+        url: "https://dl.google.com/go/go{{ context.go_version }}.linux-arm64.tar.gz"
+      condition: arch == "aarch64"
 
     - run:
         - apt-get update
         - apt-get install -y {{ get_file("apptainer.deb") }}
         - rm -rf /var/lib/apt/lists/*
+      condition: arch == "x86_64"
+
+    - workdir: /tmp
+      condition: arch == "aarch64"
+
+    - run:
+        - rm -rf /usr/local/go
+        - tar -C /usr/local -xzf {{ get_file("go.tar.gz") }}
+        - tar -xzf {{ get_file("apptainer-src.tar.gz") }}
+        - cd apptainer-{{ context.apptainer_version }}
+        - export PATH=/usr/local/go/bin:$PATH
+        - ./mconfig --without-suid
+        - cd builddir
+        - make -j2
+        - make install
+      condition: arch == "aarch64"
 
     # Install Python environment with miniconda
     - template:
