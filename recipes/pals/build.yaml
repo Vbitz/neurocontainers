@@ -1,5 +1,11 @@
 variables:
   upstream_commit: b3699e951ba929d5822bd98a8b65414f075f02a8
+  miniconda_installer:
+    try:
+      - value: Miniconda3-py310_25.5.1-0-Linux-x86_64.sh
+        condition: arch == "x86_64"
+      - value: Miniconda3-py310_25.5.1-0-Linux-aarch64.sh
+        condition: arch == "aarch64"
 
 name: pals
 version: 2.0.1
@@ -10,6 +16,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 readme: |
   ## PALS - Pipeline for Analyzing Lesions After Stroke {{ context.version }}
@@ -71,9 +78,11 @@ readme: |
   https://github.com/npnl/PALS
 
 files:
-  - name: miniconda.sh
+  - name: Miniconda3-py310_25.5.1-0-Linux-x86_64.sh
     url: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.5.1-0-Linux-x86_64.sh
     sha256: aa8cbd6aa7ef85d0528616d2dffce8bd0b51924e7ddd18734ede6c1c63c462d0
+  - name: Miniconda3-py310_25.5.1-0-Linux-aarch64.sh
+    url: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.5.1-0-Linux-aarch64.sh
   - name: presets.json
     contents: |
       {
@@ -120,7 +129,7 @@ build:
  
     # ── Miniconda (manual install to avoid conda tos bug) ────────────────────
     - run:
-        - cp {{ get_file("miniconda.sh") }} /tmp/miniconda.sh
+        - cp {{ get_file(context.miniconda_installer) }} /tmp/miniconda.sh
         - bash /tmp/miniconda.sh -b -p /opt/miniconda
         - /opt/miniconda/bin/conda tos accept
         - rm -f /tmp/miniconda.sh
