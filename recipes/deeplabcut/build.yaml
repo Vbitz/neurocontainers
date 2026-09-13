@@ -2,6 +2,7 @@ name: deeplabcut
 version: 2.3.11
 architectures:
   - x86_64
+  - aarch64
 structured_readme:
   description: DeepLabCut is a toolbox for state-of-the-art markerless pose estimation of animals performing various behaviors. As long as you can see (label) what you want to track, you can use this toolbox, as it is animal and object agnostic.
   example: |-
