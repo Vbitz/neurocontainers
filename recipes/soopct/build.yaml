@@ -80,6 +80,7 @@ build:
         - cmake
         - libjpeg-dev
         - libpng-dev
+        - libstdc++6
         - libtiff-dev
         - zlib1g-dev
     - condition: arch == "x86_64"
@@ -97,6 +98,7 @@ build:
     - condition: arch == "aarch64"
       run:
         - python -m pip install --no-cache-dir --no-binary=antspyx "antspyx==0.5.4"
+        - ln -sf /usr/lib/aarch64-linux-gnu/libstdc++.so.6 /opt/miniconda/lib/libstdc++.so.6
     - run:
         - git clone https://github.com/rordenlab/soop-ct.git && git -C soop-ct checkout {{ context.upstream_commit }}
         - cd soop-ct
