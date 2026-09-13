@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: github_tags
@@ -47,11 +48,28 @@ build:
         - libxxf86vm1
         - xz-utils
 
-    - workdir: /opt/blender-{{ context.version }}
+    - condition: arch == "x86_64"
+      workdir: /opt/blender-{{ context.version }}
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - tar -xJ --strip-components=1 -C /opt/blender-{{ context.version }} -f {{ get_file("blender_archive") }}
         - ln -sfn /opt/blender-{{ context.version }}/blender /usr/local/bin/blender
+
+    - condition: arch == "aarch64"
+      install:
+        - python3
+
+    - condition: arch == "aarch64"
+      workdir: /opt/blender-{{ context.version }}
+
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("blender_source") }} --strip-components=1 -C /opt/blender-{{ context.version }}
+        - python3 build_files/build_environment/install_linux_packages.py
+        - make deps
+        - make
+        - ln -sfn /opt/build_linux/bin/blender /usr/local/bin/blender
 
     - environment:
         PATH: $PATH:/opt/blender-{{ context.version }}
@@ -94,3 +112,7 @@ readme: |-
 files:
   - name: blender_archive
     url: "https://mirrors.iu13.net/blender/release/Blender{{ context.version.split('.')[0] }}.{{ context.version.split('.')[1] }}/blender-{{ context.version }}-linux-x64.tar.xz"
+  - name: blender_source
+    condition: arch == "aarch64"
+    url: "https://github.com/blender/blender/archive/refs/tags/v{{ context.version }}.tar.gz"
+    sha256: f506150541bf77178cb6bd7db9eb2c55ad1547353325cbde930717ba7cda68c8
