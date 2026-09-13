@@ -73,7 +73,7 @@ build:
         - install -m 0755 /opt/sources/build/bin/niimath /opt/bidsvue/src-tauri/binaries/niimath-aarch64-unknown-linux-gnu
         - rm -rf /opt/sources/*
         - tar -xzf {{ get_file("bids_validator_source") }} -C /opt/sources --strip-components=1
-        - '{{ get_file("rustup_init") }} -y --default-toolchain 1.85.0 --profile minimal'
+        - '{{ get_file("rustup_init") }} -y --default-toolchain 1.86.0 --profile minimal'
         - export PATH="/root/.cargo/bin:$PATH" && cargo build --manifest-path /opt/sources/Cargo.toml --release --locked
         - install -m 0755 /opt/sources/target/release/bids-validator /opt/bidsvue/src-tauri/binaries/bids-validator-aarch64-unknown-linux-gnu
         - rm -rf /opt/sources
