@@ -53,7 +53,7 @@ build:
     - condition: arch == "aarch64"
       run:
         - tar -xzf {{ get_file("terastitcher_source_tar_gz") }}
-        - cmake -S /tmp/TeraStitcher-{{ context.terastitcher_source_commit }}/src -B /tmp/terastitcher-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/terastitcher-{{ context.upstream_version }} -DWITH_UTILITY_MODULE_teraconverter=ON -DWITH_UTILITY_MODULE_mdatagenerator=ON
+        - cmake -S /tmp/TeraStitcher-{{ context.terastitcher_source_commit }}/src -B /tmp/terastitcher-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_INSTALL_PREFIX=/opt/terastitcher-{{ context.upstream_version }} -DWITH_UTILITY_MODULE_teraconverter=ON -DWITH_UTILITY_MODULE_mdatagenerator=ON
         - cmake --build /tmp/terastitcher-build --parallel
         - cmake --install /tmp/terastitcher-build
         - cp /opt/terastitcher-{{ context.upstream_version }}/bin/terastitcher /opt/terastitcher-{{ context.upstream_version }}/
