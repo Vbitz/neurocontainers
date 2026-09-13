@@ -150,6 +150,7 @@ build:
       run:
         - mkdir -p /opt/qupath-source
         - tar -xzf {{ get_file("qupath_source") }} -C /opt/qupath-source --strip-components=1
+        - chmod 0755 /opt/qupath-source/gradlew
         - cd /opt/qupath-source && ./gradlew --no-daemon clean jpackage -Ppackage=image -x javadoc
         - mkdir -p /usr/local/bin
         - cp -a /opt/qupath-source/build/dist/QuPath-{{ context.version }} /usr/local/bin/QuPath
