@@ -67,9 +67,24 @@ build:
         - unzip dsi_studio_ubuntu2204_cpu.zip
         - chmod a+rwx {{ context.dsi_studio_unpacked_dir }} -R
         - mv {{ context.dsi_studio_unpacked_dir }} dsi-studio
+
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /tmp/dsi-studio-data
+        - unzip -q '{{ get_file("dsi_studio_legacy_data_zip") }}' 'dsi-studio/atlas/human/human.WM.nii.gz' 'dsi-studio/atlas/human/human.mask.nii.gz' 'dsi-studio/atlas/human/human.roi.nii.gz' 'dsi-studio/atlas/human_neonate/*' 'dsi-studio/network/*' 'dsi-studio/color_map/*' -d /tmp/dsi-studio-data
+        - cp -a /tmp/dsi-studio-data/dsi-studio/atlas/human/human.WM.nii.gz dsi-studio/atlas/human/
+        - cp -a /tmp/dsi-studio-data/dsi-studio/atlas/human/human.mask.nii.gz dsi-studio/atlas/human/
+        - cp -a /tmp/dsi-studio-data/dsi-studio/atlas/human/human.roi.nii.gz dsi-studio/atlas/human/
+        - cp -a /tmp/dsi-studio-data/dsi-studio/atlas/human_neonate dsi-studio/atlas/
+        - cp -a /tmp/dsi-studio-data/dsi-studio/network dsi-studio/
+        - cp -a /tmp/dsi-studio-data/dsi-studio/color_map dsi-studio/
+
+    - run:
         - ln -s human_T1w.nii.gz dsi-studio/atlas/human/human.T1W.nii.gz
         - ln -s human_QA.nii.gz dsi-studio/atlas/human/human.QA.nii.gz
         - ln -s ../../tract/human.fz dsi-studio/atlas/human/human.fz
+        - ln -s ../../tract/human.tt.gz dsi-studio/atlas/human/human.tt.gz
+        - rm -rf /tmp/dsi-studio-data
         - rm dsi_studio_ubuntu2204_cpu.zip
 
     - environment:
@@ -118,3 +133,7 @@ files:
     url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204_cpu_arm64.zip
     condition: arch == "aarch64"
     sha256: 49d1bfffda09380accad1c5e949f37203928e17bd4f37dcd0a1942b257ccc430
+  - name: dsi_studio_legacy_data_zip
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/2024.06.12/dsi_studio_ubuntu2204_cpu.zip
+    condition: arch == "aarch64"
+    sha256: 3bb5281a375b21744cf0fdcd096b198cec7ce5c2815ab73973b0a2074b12c338
