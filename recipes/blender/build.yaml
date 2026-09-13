@@ -59,6 +59,7 @@ build:
     - condition: arch == "aarch64"
       install:
         - python3
+        - sudo
 
     - condition: arch == "aarch64"
       workdir: /opt/blender-{{ context.version }}
