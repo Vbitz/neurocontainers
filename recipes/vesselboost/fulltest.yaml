@@ -287,6 +287,7 @@ tests:
   # ==========================================================================
   - name: Test-time adaptation without proxy (minimal epochs)
     description: Test TTA module without providing proxy segmentation
+    timeout: 300
     command: "bash -lc 'rm -rf test_output/vesselboost/output_tta_noproxy && \\\nmkdir -p test_output/vesselboost/output_tta_noproxy && \\\npython /opt/VesselBoost/test_time_adaptation.py \\\n  --image_path test_output/vesselboost/input_t1w \\\n  --output_path test_output/vesselboost/output_tta_noproxy \\\n  --pretrained /opt/VesselBoost/saved_models/manual_0429 \\\n  --prep_mode 4 \\\n  --epochs 2 \\\n  --learning_rate 1e-3 \\\n  --thresh 0.1 \\\n  --cc 10'"
     validate:
       - output_exists: ${output_dir}/vesselboost/output_tta_noproxy
@@ -300,12 +301,14 @@ tests:
 
   - name: Test-time adaptation with preprocessing
     description: Test TTA module with bias field correction
+    timeout: 300
     command: "bash -lc 'rm -rf test_output/vesselboost/output_tta_preproc test_output/vesselboost/preprocessed_tta && \\\nmkdir -p test_output/vesselboost/output_tta_preproc && \\\nmkdir -p test_output/vesselboost/preprocessed_tta && \\\npython /opt/VesselBoost/test_time_adaptation.py \\\n  --image_path test_output/vesselboost/input_t1w \\\n  --preprocessed_path test_output/vesselboost/preprocessed_tta \\\n  --output_path test_output/vesselboost/output_tta_preproc \\\n  --pretrained /opt/VesselBoost/saved_models/manual_0429 \\\n  --prep_mode 1 \\\n  --epochs 2 \\\n  --learning_rate 1e-3 \\\n  --thresh 0.1 \\\n  --cc 10'"
     validate:
       - output_exists: ${output_dir}/vesselboost/output_tta_preproc
 
   - name: Test-time adaptation with different model
     description: Test TTA module with omelette1 model
+    timeout: 300
     command: "bash -lc 'rm -rf test_output/vesselboost/output_tta_omelette && \\\nmkdir -p test_output/vesselboost/output_tta_omelette && \\\npython /opt/VesselBoost/test_time_adaptation.py \\\n  --image_path test_output/vesselboost/input_t1w \\\n  --output_path test_output/vesselboost/output_tta_omelette \\\n  --pretrained /opt/VesselBoost/saved_models/omelette1_0429 \\\n  --prep_mode 4 \\\n  --epochs 2 \\\n  --learning_rate 1e-3 \\\n  --thresh 0.1 \\\n  --cc 10'"
     validate:
       - output_exists: ${output_dir}/vesselboost/output_tta_omelette
