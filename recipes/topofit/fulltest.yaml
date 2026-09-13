@@ -38,16 +38,21 @@ tests:
       "
     expected_output_contains: "cortex atlas ok"
 
-  - name: OpenRecon-compatible CUDA runtime
-    description: Verify PyTorch stays within the CUDA ceiling enforced by the OpenRecon packager.
+  - name: OpenRecon-compatible PyTorch runtime
+    description: Verify the GPU build stays within the OpenRecon CUDA ceiling and the ARM64 build selects its supported CPU runtime.
     command: |
       python3 -c "
+      import platform
       import torch
-      version = tuple(map(int, torch.version.cuda.split('.')[:2]))
-      assert version <= (11, 8), torch.version.cuda
-      print('OpenRecon-compatible PyTorch CUDA', torch.version.cuda)
+      if platform.machine() == 'aarch64':
+          assert torch.version.cuda is None, torch.version.cuda
+          print('OpenRecon-compatible PyTorch CPU')
+      else:
+          version = tuple(map(int, torch.version.cuda.split('.')[:2]))
+          assert version == (11, 8), torch.version.cuda
+          print('OpenRecon-compatible PyTorch CUDA', torch.version.cuda)
       "
-    expected_output_contains: "OpenRecon-compatible PyTorch CUDA 11.8"
+    expected_output_contains: "OpenRecon-compatible PyTorch"
 
   - name: BrainNet launcher available
     description: Verify the pinned upstream command is on PATH.
