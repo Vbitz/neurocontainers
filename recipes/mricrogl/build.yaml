@@ -61,7 +61,7 @@ build:
         - cd dcm2niix-{{ context.dcm2niix_version }}/console
         - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
         - cmake --build build --parallel
-        - install -m 0755 build/bin/dcm2niix /opt/MRIcroGL/Resources/dcm2niix
+        - install -m 0755 build/dcm2niix /opt/MRIcroGL/Resources/dcm2niix
         - cd /opt/MRIcroGL
         - lazbuild --build-ide= --add-package lazopenglcontext MRIcroGL_NoPython.lpi
         - lazbuild -B --ws=qt5 MRIcroGL_NoPython.lpi
