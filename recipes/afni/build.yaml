@@ -137,11 +137,19 @@ build:
         PATH: /usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/abin:~/.local/bin
         R_LIBS: /usr/local/share/R-4.3
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file(context.r_libs_file) }} linux_ubuntu_24_R-4.3_libs.tgz
         - tar -xf linux_ubuntu_24_R-4.3_libs.tgz
         - mv linux_ubuntu_24_R-4.3_libs /usr/local/share/R-4.3
         - rm -f linux_ubuntu_24_R-4.3_libs.tgz
+
+    - condition: arch == "aarch64"
+      run:
+        - cp {{ get_file(context.r_libs_file) }} linux_ubuntu_24_ARM_R-4.3_libs.tgz
+        - tar -xf linux_ubuntu_24_ARM_R-4.3_libs.tgz
+        - mv linux_ubuntu_24_ARM_R-4.3_libs /usr/local/share/R-4.3
+        - rm -f linux_ubuntu_24_ARM_R-4.3_libs.tgz
 
     - run:
         - rPkgsInstall -pkgs ALL
