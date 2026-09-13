@@ -46,6 +46,10 @@ build:
         - mkdir -p /opt/mritools-{{ context.version }}/source
         - tar -xz -C /opt/mritools-{{ context.version }}/source --strip-components 1 -f {{ get_file("compilemri_source") }}
         - tar -xz -C /opt -f {{ get_file("julia") }}
+        # CompileMRI's build script adds the App dependencies one at a time.
+        # Suppress Julia's automatic intermediate precompile so App is not
+        # loaded before its final RomeoApp/ClearswiApp dependencies exist.
+        - export JULIA_PKG_PRECOMPILE_AUTO=0
         - /opt/julia-{{ context.julia_version }}/bin/julia --project=/opt/mritools-{{ context.version }}/source -e 'using Pkg; Pkg.instantiate(); Pkg.build("CompileMRI")'
         - /opt/julia-{{ context.julia_version }}/bin/julia --project=/opt/mritools-{{ context.version }}/source -e 'using CompileMRI; CompileMRI.compile("/tmp/mritools-compiled")'
         - cp -a /tmp/mritools-compiled/. /opt/mritools-{{ context.version }}/
