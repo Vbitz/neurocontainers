@@ -54,8 +54,8 @@ build:
       - cmake -S /tmp -B /tmp/itk-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itk -DBUILD_TESTING=OFF -DITK_BUILD_DEFAULT_MODULES=ON -DBUILD_SHARED_LIBS=ON -DITK_WRAP_PYTHON=OFF
       - cmake --build /tmp/itk-build --parallel 2
       - cmake --install /tmp/itk-build
-      - git clone --depth 1 https://github.com/pyushkevich/c3d.git /tmp/c3d-src
-      - git -C /tmp/c3d-src checkout {{ context.c3d_source_commit }}
+      - mkdir -p /tmp/c3d-src
+      - tar -xzf {{ get_file("c3d_source_tar_gz") }} -C /tmp/c3d-src --strip-components 1
       - cmake -S /tmp/c3d-src -B /tmp/c3d-build -DCONVERT3D_USE_ITK_REMOTE_MODULES=OFF -DBUILD_GUI=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/itk -DITK_DIR=/opt/itk/lib/cmake/ITK-5.3 -DCMAKE_INSTALL_PREFIX=/opt/convert3d-nightly
       - cmake --build /tmp/c3d-build --parallel 2
       - cmake --install /tmp/c3d-build
@@ -78,3 +78,7 @@ files:
   condition: arch == "aarch64"
   url: https://github.com/InsightSoftwareConsortium/ITK/archive/refs/tags/v5.3.0.tar.gz
   sha256: 64e7e8094a5023c8f68ee042459d6319581fadb35e2fe90a4ae230ce36369db1
+- name: c3d_source_tar_gz
+  condition: arch == "aarch64"
+  url: https://github.com/pyushkevich/c3d/archive/61753cca082f7dc783952bd980918a3d4a48f280.tar.gz
+  sha256: e06a49c7b1926ae885a21ef8ad486366d9857dd9b78571bde160cff9788d55d1
