@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: github_release
@@ -31,14 +32,44 @@ build:
         - appmenu-gtk2-module
         - libglu1-mesa
 
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - fpc
+        - lazarus
+        - lcl-qt5
+        - libgl1-mesa-dev
+        - libglu1-mesa-dev
+        - libqt5pas-dev
+        - pkg-config
+        - python3.8-dev
+
     - workdir: /opt
 
-    - run:
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("surfice_source") }}
+        - mv surf-ice-{{ context.version }} Surf_Ice
+        - cd /opt/Surf_Ice
+        - cp optsCore.inc opts.inc
+        - sed -i '/PythonBridge\/x86_64-linux\/libpython3.7m.a/c\    {$linklib python3.8}' mainunit.pas
+        - ln -s /usr Resources/python37
+        - lazbuild --build-ide= --add-package lazopenglcontext surfice.lpi
+        - rm -rf lib
+        - lazbuild -B surfice.lpr
+        - cp surfice surfice_core
+        - rm -rf lib
+        - lazbuild -B --ws=qt5 surfice.lpr
+        - cp surfice surfice_qt5
+
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file("surfice_linux_zip") }} surfice_linux.zip
         - unzip surfice_linux.zip
         - rm -rf surfice_linux.zip
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file("libqt5pas1_2_9_0_amd64_deb") }} libqt5pas1_2.9-0_amd64.deb
         - apt install ./libqt5pas1_2.9-0_amd64.deb
         - rm -rf libqt5pas1_2.9-0_amd64.deb
@@ -82,7 +113,14 @@ gui_apps:
 
 files:
   - name: surfice_linux_zip
+    condition: arch == "x86_64"
     url: https://github.com/neurolabusc/surf-ice/releases/download/v{{ context.version }}/surfice_linux.zip
 
   - name: libqt5pas1_2_9_0_amd64_deb
+    condition: arch == "x86_64"
     url: https://github.com/davidbannon/libqt5pas/releases/download/v1.2.9/libqt5pas1_2.9-0_amd64.deb
+
+  - name: surfice_source
+    condition: arch == "aarch64"
+    url: https://github.com/neurolabusc/surf-ice/archive/refs/tags/v{{ context.version }}.tar.gz
+    sha256: 72d3280aaa3cc85ec254dc2e4000940af8e61c1b93b1b8547f95a3f0392cfe74
