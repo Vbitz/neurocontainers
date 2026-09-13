@@ -90,14 +90,16 @@ tests:
       - output_exists: ${output_dir}/t1w_brain_mask.nii.gz
       - same_dimensions: ["${output_dir}/t1w_brain.nii.gz", "${t1w}"]
 
-  - name: SynthStrip with distance transform
-    description: Run SynthStrip and save signed distance transform
-    command: mri_synthstrip -i ${t1w} -o test_output/t1w_brain_sdt.nii.gz -d test_output/t1w_sdt.nii.gz
+  - name: SynthStrip with explicit mask output
+    description: Run SynthStrip and save an explicit binary brain mask
+    command: mri_synthstrip -i ${t1w} -o test_output/t1w_brain_masked.nii.gz -m test_output/t1w_explicit_mask.nii.gz
     timeout: 600
     depends_on: SynthStrip skull stripping
     validate:
-      - output_exists: ${output_dir}/t1w_brain_sdt.nii.gz
-      - output_exists: ${output_dir}/t1w_sdt.nii.gz
+      - output_exists: ${output_dir}/t1w_brain_masked.nii.gz
+      - output_exists: ${output_dir}/t1w_explicit_mask.nii.gz
+      - same_dimensions: ["${output_dir}/t1w_brain_masked.nii.gz", "${t1w}"]
+      - same_dimensions: ["${output_dir}/t1w_explicit_mask.nii.gz", "${t1w}"]
 
   - name: SynthStrip with custom border
     description: Run SynthStrip with modified mask border threshold
