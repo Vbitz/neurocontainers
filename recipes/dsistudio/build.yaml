@@ -17,7 +17,7 @@ variables:
     try:
       - value: dsi_studio_ubuntu2204_zip
         condition: arch == "x86_64"
-      - value: dsi_studio_ubuntu2204_arm64_zip
+      - value: dsi_studio_ubuntu2204_cpu_arm64_zip
         condition: arch == "aarch64"
 
 auto_update:
@@ -52,11 +52,22 @@ build:
 
     - workdir: /opt
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file(context.dsi_studio_archive) }} dsi_studio.zip
         - unzip dsi_studio.zip
         - chmod a+rwx dsi-studio -R
         - rm dsi_studio.zip
+
+    - condition: arch == "aarch64"
+      run:
+        - cp {{ get_file(context.dsi_studio_archive) }} dsi_studio.zip
+        - unzip dsi_studio.zip
+        - mv dsi-studio-cpu dsi-studio
+        - chmod a+rwx dsi-studio -R
+        - rm dsi_studio.zip
+
+    - run:
         - printf '%s\n' '#!/usr/bin/env bash' 'set -e' 'if [ -n "${DISPLAY:-}" ]; then exec /opt/dsi-studio/dsi_studio "$@"; else exec xvfb-run -a /opt/dsi-studio/dsi_studio "$@"; fi' > /usr/local/bin/dsi_studio
         - chmod +x /usr/local/bin/dsi_studio
 
@@ -102,7 +113,7 @@ files:
     condition: arch == "x86_64"
     url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204.zip
     sha256: 2d04771f669b4dcd5961a989b4c12820f2035f9fcafa798fdee215a1ba0e2722
-  - name: dsi_studio_ubuntu2204_arm64_zip
+  - name: dsi_studio_ubuntu2204_cpu_arm64_zip
     condition: arch == "aarch64"
-    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204_arm64.zip
-    sha256: 40442cb31c6b9e50da76cac9c765b24c39215f3fb1853e405a3420385088177f
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204_cpu_arm64.zip
+    sha256: 49d1bfffda09380accad1c5e949f37203928e17bd4f37dcd0a1942b257ccc430
