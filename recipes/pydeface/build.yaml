@@ -38,7 +38,7 @@ build:
     - condition: arch == "aarch64"
       run:
         - fslpython -m ensurepip --upgrade
-        - fslpython -m pip install --no-cache-dir --upgrade "pip<24.1" "setuptools<81" wheel
+        - fslpython -m pip install --no-cache-dir --upgrade "pip<24.1" "setuptools<67.5" wheel
         - fslpython -m pip install --no-cache-dir "pydeface=={{ context.version }}" osfclient
 
     - condition: arch == "x86_64"
