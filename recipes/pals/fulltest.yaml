@@ -13,6 +13,7 @@ tests:
   command: |-
     set -eu
     work=$(mktemp -d)
+    mkdir -p "$work/out"
     cp /opt/pals-2.0.1/ROIs/roi_L_CST_2mm.nii.gz "$work/image.nii.gz"
     cp /opt/pals-2.0.1/ROIs/roi_L_CST_2mm.nii.gz "$work/lesion.nii.gz"
     cat > "$work/config.json" <<EOF
