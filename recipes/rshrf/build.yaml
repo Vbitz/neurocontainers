@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 categories:
   - functional imaging
@@ -22,17 +23,31 @@ structured_readme:
   citation: 'Wu, G. R., Colenbier, N., Van Den Bossche, S., Clauw, K., Johri, A., Tandon, M., & Marinazzo, D. (2021). rsHRF: A toolbox for resting-state HRF estimation and deconvolution. NeuroImage, 244, 118591. doi:10.1016/j.neuroimage.2021.118591.'
 
 auto_update:
-  method: dockerhub
-  repo: bids/rshrf
+  method: github_release
+  repo: bids-apps/rsHRF
   version_regex: ^v(?P<version>\d+(?:\.\d+)+)$
 
 build:
   kind: neurodocker
-  base-image: bids/rshrf:v{{ context.version }}
+  base-image: python:3.11-slim
   pkg-manager: apt
   add-default-template: false
   add-tzdata: false
   directives:
+    - install:
+        - build-essential
+        - libtool
+        - autoconf
+        - pkg-config
+        - libgsl-dev
+        - ca-certificates
+        - xvfb
+    - workdir: /opt/rsHRF
+    - run:
+        - tar -xzf {{ get_file("rshrf_source_tar_gz") }} --strip-components=1 -C /opt/rsHRF
+        - python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+        - python -m pip install --no-cache-dir -r requirements.txt
+        - python -m pip install --no-cache-dir -e .
     - run:
         - mkdir -p /neurodocker
         - echo '#!/usr/bin/env bash' > /neurodocker/startup.sh
@@ -49,6 +64,11 @@ build:
 deploy:
   bins:
     - rsHRF
+
+files:
+  - name: rshrf_source_tar_gz
+    url: https://github.com/bids-apps/rsHRF/archive/v{{ context.version }}.tar.gz
+    sha256: 0afda67cf84ac0219aad289393cfc65f93ee9ea2ff5f55745e68dee1e124b8f8
 
 readme: |-
   ----------------------------------
