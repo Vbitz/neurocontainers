@@ -83,6 +83,7 @@ files:
     sha256: aa8cbd6aa7ef85d0528616d2dffce8bd0b51924e7ddd18734ede6c1c63c462d0
   - name: Miniconda3-py310_25.5.1-0-Linux-aarch64.sh
     url: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.5.1-0-Linux-aarch64.sh
+    sha256: 6886af5e5db79dfb4429cde937b6f806d02b0e98dd11249c74917661fc7b1f4b
   - name: presets.json
     contents: |
       {
