@@ -8,6 +8,7 @@ icon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAIAAABt+uBvAAABOUlE
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -37,6 +38,20 @@ build:
         - ca-certificates
         - unzip
 
+    # antspyx does not publish a Linux ARM64 wheel. Its upstream source
+    # installation is documented and builds the pinned ITK/ANTs components
+    # with CMake, so provide the ordinary native build prerequisites only on
+    # ARM64. The x86_64 wheel path below remains unchanged.
+    - condition: arch=="aarch64"
+      install:
+        - build-essential
+        - cmake
+        - gfortran
+        - libblas-dev
+        - liblapack-dev
+        - libpng-dev
+        - python3-dev
+
     - template:
         name: miniconda
         version: py311_24.9.2-0
@@ -44,10 +59,22 @@ build:
         env_name: brainles
         env_exists: "false"
 
-    - run:
-        # Core library. antspyx (registration) + SimpleITK ship self-contained
-        # manylinux wheels, so no extra system libraries are needed on x86_64.
+    - condition: arch=="x86_64"
+      run:
+        # Core library. The x86_64 antspyx and SimpleITK manylinux wheels
+        # remain the normal fast path.
         - /opt/miniconda-py311_24.9.2-0/envs/brainles/bin/python -m pip install --no-cache-dir brainles-preprocessing=={{ context.upstream_version }}
+
+    - condition: arch=="aarch64"
+      run:
+        # antspyx 0.5.4 publishes no Linux ARM64 wheel, but its source
+        # distribution contains the documented CMake build of ITK and ANTs.
+        # Install it separately so the ARM64 source route is explicit and the
+        # later BrainLesion resolve cannot silently select an x86 wheel.
+        - j=2 CMAKE_BUILD_PARALLEL_LEVEL=2 /opt/miniconda-py311_24.9.2-0/envs/brainles/bin/python -m pip install --no-cache-dir --no-binary=antspyx "antspyx==0.5.4"
+        - /opt/miniconda-py311_24.9.2-0/envs/brainles/bin/python -m pip install --no-cache-dir brainles-preprocessing=={{ context.upstream_version }}
+
+    - run:
         - /opt/miniconda-py311_24.9.2-0/envs/brainles/bin/python -c "import brainles_preprocessing; print('brainles-preprocessing OK')"
 
     - run:
