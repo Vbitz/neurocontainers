@@ -98,7 +98,11 @@ binaries:
       {% if self.version not in ("5.0.9", "5.0.8") -%}
       fslpython_installer={{ self.install_path }}/etc/fslconf/fslpython_install.sh
       fslpython_environment={{ self.install_path }}/etc/fslconf/fslpython_environment.yml
+      {% if self.arch == "aarch64" -%}
+      sed -i 's/Miniconda3-latest-Linux-x86_64.sh/Miniconda3-py39_24.7.1-0-Linux-aarch64.sh/' "$fslpython_installer"
+      {% else -%}
       sed -i 's/Miniconda3-latest-Linux-x86_64.sh/Miniconda3-py39_24.7.1-0-Linux-x86_64.sh/' "$fslpython_installer"
+      {% endif -%}
       if ! grep -q '^ - requests' "$fslpython_environment"; then
         sed -i '/^ - pip:/i\ - requests<2.32' "$fslpython_environment";
       fi
