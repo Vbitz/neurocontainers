@@ -9,6 +9,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   venv: /opt/brats-0.1.8
@@ -17,6 +18,7 @@ variables:
   # backend shells out to a "singularity" binary and to spython, so both have to
   # exist here.
   apptainer_version: 1.4.4
+  go_version: 1.23.6
 
 auto_update:
   method: pypi
@@ -57,15 +59,58 @@ build:
         - uidmap
         - wget
 
-    # Same source and pattern as the standalone apptainer recipe.
+    # Same source and pattern as the standalone apptainer recipe. The release
+    # publishes an amd64 Debian package, while the ARM64 path builds the same
+    # upstream release from source with its documented Go toolchain.
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - libseccomp-dev
+        - fakeroot
+        - cryptsetup
+        - tzdata
+        - dh-apparmor
+        - git
+        - libsubid-dev
+        - pkg-config
+
     - file:
         name: apptainer.deb
         url: "https://github.com/apptainer/apptainer/releases/download/v{{ context.apptainer_version }}/apptainer_{{ context.apptainer_version }}_amd64.deb"
+      condition: arch == "x86_64"
+
+    - file:
+        name: apptainer-src.tar.gz
+        url: "https://github.com/apptainer/apptainer/releases/download/v{{ context.apptainer_version }}/apptainer-{{ context.apptainer_version }}.tar.gz"
+      condition: arch == "aarch64"
+
+    - file:
+        name: go.tar.gz
+        url: "https://dl.google.com/go/go{{ context.go_version }}.linux-arm64.tar.gz"
+      condition: arch == "aarch64"
 
     - run:
         - apt-get update
         - apt-get install -y {{ get_file("apptainer.deb") }}
         - rm -rf /var/lib/apt/lists/*
+      condition: arch == "x86_64"
+
+    - workdir: /tmp
+      condition: arch == "aarch64"
+
+    - run:
+        - rm -rf /usr/local/go
+        - tar -C /usr/local -xzf {{ get_file("go.tar.gz") }}
+        - tar -xzf {{ get_file("apptainer-src.tar.gz") }}
+        - cd apptainer-{{ context.apptainer_version }}
+        - export PATH=/usr/local/go/bin:$PATH
+        - ./mconfig --without-suid
+        - cd builddir
+        - make -j2
+        - make install
+      condition: arch == "aarch64"
+
+    - run:
         # brats invokes the binary as "singularity" (brats/core/singularity.py
         # calls subprocess.run(["singularity", ...]) and spython's Client), which
         # apptainer does not provide under that name.
