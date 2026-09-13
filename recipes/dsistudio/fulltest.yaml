@@ -171,7 +171,7 @@ tests:
   - name: atk action - track multiple bundles
     description: Automatic tracking of multiple bundles
     command: mkdir -p test_output/atk_25 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_CingulumL,Association_CingulumR
-      --output=test_output/atk_25 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_25
+      --output=test_output/atk_25 --overwrite=1 && test -n "$(find test_output/atk_25
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_25 -name '*.no_result.txt' -print
       -quit)"
     expected_exit_code: 0
@@ -331,7 +331,7 @@ tests:
       --connectivity_type=end --output=test_output/template_conn_end.tt.gz
     validate:
       - output_exists: ${output_dir}/template_conn_end.tt.gz
-      - output_exists: test_output/template_conn_end.tt.gz.Brodmann.count.end.connectivity.mat
+      - output_exists: test_output/template_conn_end.tt.gz.Brodmann.connectivity.mat
   - name: reg action - cost function mutual information
     description: Complete structural registration on CPU and verify the transformed image is written.
     command: mkdir -p test_output/reg_56 && dsi_studio --action=reg --source=${t1w} --to=${template_t1w} --reg_type=0
@@ -364,7 +364,7 @@ tests:
   - name: atk action - superior longitudinal fasciculus
     description: Track superior longitudinal fasciculus
     command: mkdir -p test_output/atk_60 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_SuperiorLongitudinalFasciculusL
-      --output=test_output/atk_60 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_60
+      --output=test_output/atk_60 --overwrite=1 && test -n "$(find test_output/atk_60
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_60 -name '*.no_result.txt' -print
       -quit)"
     expected_exit_code: 0
@@ -380,7 +380,7 @@ tests:
   - name: atk action - corpus callosum
     description: Track corpus callosum
     command: mkdir -p test_output/atk_62 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Commissure_CorpusCallosum
-      --output=test_output/atk_62 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_62
+      --output=test_output/atk_62 --overwrite=1 && test -n "$(find test_output/atk_62
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_62 -name '*.no_result.txt' -print
       -quit)"
     expected_exit_code: 0
@@ -388,7 +388,7 @@ tests:
   - name: atk action - thalamic radiation
     description: Track thalamic radiation
     command: mkdir -p test_output/atk_63 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=ProjectionBasalGanglia_ThalamicRadiationL
-      --output=test_output/atk_63 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_63
+      --output=test_output/atk_63 --overwrite=1 && test -n "$(find test_output/atk_63
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_63 -name '*.no_result.txt' -print
       -quit)"
     expected_exit_code: 0
@@ -489,7 +489,7 @@ tests:
   - name: Pipeline - autotrack multiple bundles with export
     description: Automatically track bundles and export statistics
     command: mkdir -p test_output/atk_82 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Uncinate
-      --output=test_output/atk_82 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test
+      --output=test_output/atk_82 --overwrite=1 && test
       -n "$(find test_output/atk_82 -name '*.tt.gz' -size +0c -print -quit)" && test -n "$(find test_output/atk_82
       -name '*.stat.txt' -size +0c -print -quit)" && test -z "$(find test_output/atk_82 -name '*.no_result.txt'
       -print -quit)"
