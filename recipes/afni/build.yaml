@@ -1,4 +1,16 @@
-variables: {}
+variables:
+  afni_binary_file:
+    try:
+      - value: afni_binary
+        condition: arch == "x86_64"
+      - value: afni_binary_arm64
+        condition: arch == "aarch64"
+  r_libs_file:
+    try:
+      - value: linux_ubuntu_24_R_4_3_libs_tgz
+        condition: arch == "x86_64"
+      - value: linux_ubuntu_24_ARM_R_4_3_libs_tgz
+        condition: arch == "aarch64"
 
 name: afni
 version: 26.0.07
@@ -11,6 +23,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 structured_readme:
   description: AFNI (Analysis of Functional NeuroImages) is a leading software suite of C, Python, R programs and shell scripts primarily developed for the analysis and display of anatomical and functional MRI (FMRI) data. It is freely available (both in source code and in precompiled binaries) for research purposes. The software is made to run on virtually any Unix system with X11 and Motif displays. Binary Packages are provided for MacOS and Linux systems including Fedora, Ubuntu (including Ubuntu under the Windows Subsystem for Linux)
@@ -118,14 +131,14 @@ build:
 
     - run:
         - cp {{ get_file("update_afni_binaries") }} @update.afni.binaries
-        - tcsh @update.afni.binaries -local_package {{ get_file("afni_binary") }} -bindir /usr/local/abin -do_extras
+        - tcsh @update.afni.binaries -local_package {{ get_file(context.afni_binary_file) }} -bindir /usr/local/abin -do_extras
 
     - environment:
         PATH: /usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/abin:~/.local/bin
         R_LIBS: /usr/local/share/R-4.3
 
     - run:
-        - cp {{ get_file("linux_ubuntu_24_R_4_3_libs_tgz") }} linux_ubuntu_24_R-4.3_libs.tgz
+        - cp {{ get_file(context.r_libs_file) }} linux_ubuntu_24_R-4.3_libs.tgz
         - tar -xf linux_ubuntu_24_R-4.3_libs.tgz
         - mv linux_ubuntu_24_R-4.3_libs /usr/local/share/R-4.3
         - rm -f linux_ubuntu_24_R-4.3_libs.tgz
@@ -168,7 +181,17 @@ files:
 - name: update_afni_binaries
   url: https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries
 - name: linux_ubuntu_24_R_4_3_libs_tgz
+  condition: arch == "x86_64"
   url: https://afni.nimh.nih.gov/pub/dist/tgz/package_libs/linux_ubuntu_24_R-4.3_libs.tgz
 - name: afni_binary
+  condition: arch == "x86_64"
   url: https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_24_64.tgz
   sha256: 988f5d7f84b7e26f80de4ed0b2af41b93cea52a92422d0d703505e97cd980738
+- name: linux_ubuntu_24_ARM_R_4_3_libs_tgz
+  condition: arch == "aarch64"
+  url: https://afni.nimh.nih.gov/pub/dist/tgz/package_libs/linux_ubuntu_24_ARM_R-4.3_libs.tgz
+  sha256: 6562527ffdc1eab4bd683a585d5d67e2a459850594177883a6632fe6d290b90a
+- name: afni_binary_arm64
+  condition: arch == "aarch64"
+  url: https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_24_ARM.tgz
+  sha256: 026ad063a7546258c3c0cb10dec2fbfac91a0a15ab93717b8868b84140fa46a6
