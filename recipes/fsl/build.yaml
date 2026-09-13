@@ -31,6 +31,7 @@ options:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -56,7 +57,11 @@ build:
   pkg-manager: apt
 
   directives:
-    - install: git ca-certificates ltrace strace wget libxml2 gcc build-essential nvidia-cuda-toolkit xdg-utils gnupg
+    - install: git ca-certificates ltrace strace wget libxml2 gcc build-essential xdg-utils gnupg
+
+    - condition: arch == "x86_64"
+      install:
+        - nvidia-cuda-toolkit
 
     # Install Firefox from Mozilla's official APT repo so xdg-open has a working
     # browser. The default Ubuntu 24.04 `firefox` package is a snap transitional
