@@ -16,12 +16,19 @@ variables:
   mne_bids_pipeline_commit: "91c2e0677f4a015a35dad48c2faa5e47633ae497"
   bidscoin_commit: "72fde8bb1534b72238d9b8c4cf53e44b09d73879"
   sovabids_tag: v0.3.1-alpha
+  vscode_installer:
+    try:
+      - value: vscode_deb
+        condition: arch == "x86_64"
+      - value: vscode_deb_arm64
+        condition: arch == "aarch64"
 
 name: sovabids
 version: 0.3.1a0.post1
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -197,7 +204,7 @@ build:
           git+https://github.com/yjmantilla/sovabids.git@{{ context.sovabids_tag }}
     - run:
         - /opt/miniconda/envs/sovabids/bin/python -m pip check
-        - cp {{ get_file("vscode_deb") }} vscode.deb
+        - cp {{ get_file(context.vscode_installer) }} vscode.deb
         - apt install --yes ./vscode.deb
         - rm -rf ./vscode.deb
         - code --extensions-dir=/opt/vscode-extensions --user-data-dir=/opt/vscode-data --no-sandbox --install-extension ms-python.python && code --extensions-dir=/opt/vscode-extensions --user-data-dir=/opt/vscode-data --no-sandbox --install-extension ms-python.vscode-pylance && code --extensions-dir=/opt/vscode-extensions --user-data-dir=/opt/vscode-data --no-sandbox --install-extension ms-toolsai.jupyter && code --extensions-dir=/opt/vscode-extensions --user-data-dir=/opt/vscode-data --no-sandbox --install-extension ms-toolsai.jupyter-keymap && code --extensions-dir=/opt/vscode-extensions --user-data-dir=/opt/vscode-data --no-sandbox --install-extension ms-toolsai.jupyter-renderers
@@ -251,6 +258,10 @@ files:
   - name: vscode_deb
     url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
     sha256: 2493226f723f66c8e83b9d806e3fbe83dcc43f381ece51eaa03d88889542b0c0
+    condition: arch == "x86_64"
+  - name: vscode_deb_arm64
+    url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64
+    condition: arch == "aarch64"
   - name: mne_bids_pipeline_main_tar_gz
     url: https://github.com/mne-tools/mne-bids-pipeline/archive/{{ context.mne_bids_pipeline_commit }}.tar.gz
 
