@@ -2,6 +2,7 @@ name: palmettobug
 version: "0.2.11" # https://github.com/immunecells/HARMONI
 architectures:
   - x86_64
+  - aarch64
 auto_update:
   method: pypi
   package: palmettobug
