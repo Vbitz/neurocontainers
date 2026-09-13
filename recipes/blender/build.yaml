@@ -58,8 +58,19 @@ build:
 
     - condition: arch == "aarch64"
       install:
+        - autoconf
+        - automake
+        - bison
+        - libtool
+        - meson
+        - ninja-build
+        - patchelf
         - python3
+        - python3-mako
+        - pkg-config
         - sudo
+        - tcl
+        - yasm
 
     - condition: arch == "aarch64"
       workdir: /opt/blender-{{ context.version }}
