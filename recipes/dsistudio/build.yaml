@@ -47,6 +47,8 @@ build:
         - unzip
         - libqt6charts6-dev
         - libglu1-mesa
+        - xauth
+        - xvfb
 
     - workdir: /opt
 
@@ -55,6 +57,8 @@ build:
         - unzip dsi_studio.zip
         - chmod a+rwx dsi-studio -R
         - rm dsi_studio.zip
+        - printf '%s\n' '#!/usr/bin/env bash' 'set -e' 'if [ -n "${DISPLAY:-}" ]; then exec /opt/dsi-studio/dsi_studio "$@"; else exec xvfb-run -a /opt/dsi-studio/dsi_studio "$@"; fi' > /usr/local/bin/dsi_studio
+        - chmod +x /usr/local/bin/dsi_studio
 
     - environment:
         PATH: $PATH:/opt/dsi-studio
