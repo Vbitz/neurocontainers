@@ -19,6 +19,12 @@ variables:
         condition: arch == "x86_64"
       - value: dsi_studio_ubuntu2204_cpu_arm64_zip
         condition: arch == "aarch64"
+  dsi_studio_unpacked_dir:
+    try:
+      - value: dsi-studio
+        condition: arch == "x86_64"
+      - value: dsi-studio-cpu
+        condition: arch == "aarch64"
 
 auto_update:
   method: sources
@@ -59,7 +65,8 @@ build:
     - run:
         - cp {{ get_file(context.dsi_studio_archive) }} dsi_studio_ubuntu2204_cpu.zip
         - unzip dsi_studio_ubuntu2204_cpu.zip
-        - chmod a+rwx dsi-studio -R
+        - chmod a+rwx {{ context.dsi_studio_unpacked_dir }} -R
+        - mv {{ context.dsi_studio_unpacked_dir }} dsi-studio
         - rm dsi_studio_ubuntu2204_cpu.zip
 
     - environment:
