@@ -152,17 +152,17 @@ tests:
     validate:
       - output_exists: ${output_dir}/template_tracks_conn.tt.gz
       - output_exists: test_output/template_tracks_conn.tt.gz.Brodmann.connectivity.mat
-  - name: atk action - track arcuate fasciculus
-    description: Automatic tracking of arcuate fasciculus bundle
-    command: mkdir -p test_output/atk_23 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_ArcuateFasciculusL
+  - name: atk action - track association bundle
+    description: Automatic tracking of an association bundle
+    command: mkdir -p test_output/atk_23 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_UncinateFasciculusL
       --output=test_output/atk_23 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_23
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_23 -name '*.no_result.txt' -print
       -quit)"
     expected_exit_code: 0
     timeout: 300
-  - name: atk action - track corticospinal tract
-    description: Automatic tracking of corticospinal tract
-    command: mkdir -p test_output/atk_24 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=ProjectionBrainstem_CorticospinalTractL
+  - name: atk action - track projection bundle
+    description: Automatic tracking of a projection bundle
+    command: mkdir -p test_output/atk_24 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=ProjectionBasalGanglia_CorticostriatalTractL
       --output=test_output/atk_24 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_24
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_24 -name '*.no_result.txt' -print
       -quit)"
@@ -170,7 +170,7 @@ tests:
     timeout: 300
   - name: atk action - track multiple bundles
     description: Automatic tracking of multiple bundles
-    command: mkdir -p test_output/atk_25 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_ArcuateFasciculusL,Association_CingulumL,ProjectionBrainstem_CorticospinalTractL
+    command: mkdir -p test_output/atk_25 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_CingulumL,Association_UncinateFasciculusL,Commissure_CorpusCallosum
       --output=test_output/atk_25 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test -n "$(find test_output/atk_25
       -name '*.tt.gz' -size +0c -print -quit)" && test -z "$(find test_output/atk_25 -name '*.no_result.txt' -print
       -quit)"
@@ -488,7 +488,7 @@ tests:
       - output_exists: test_output/pipeline_ana_tracks.tt.gz.Brodmann.connectivity.mat
   - name: Pipeline - autotrack multiple bundles with export
     description: Automatically track bundles and export statistics
-    command: mkdir -p test_output/atk_82 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_ArcuateFasciculusL,Association_UncinateFasciculusL
+    command: mkdir -p test_output/atk_82 && dsi_studio --thread_count=2 --action=atk --source=${output_dir}/human.fz --track_id=Association_CingulumL,Association_UncinateFasciculusL
       --output=test_output/atk_82 --track_voxel_ratio=0.01 --tip_iteration=0 --overwrite=1 && test
       -n "$(find test_output/atk_82 -name '*.tt.gz' -size +0c -print -quit)" && test -n "$(find test_output/atk_82
       -name '*.stat.txt' -size +0c -print -quit)" && test -z "$(find test_output/atk_82 -name '*.no_result.txt'
