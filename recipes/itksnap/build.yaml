@@ -7,6 +7,7 @@ architectures:
   - aarch64
 
 variables:
+  itksnap_source_version: 4.4.0-beta2
   itksnap_source_revision: 1ebe25defacf051fd9f4d4f0f93b748138c92716
   itk_version: 5.4.3
   vtk_version: 9.3.1
@@ -87,6 +88,11 @@ build:
       run:
         - mkdir -p /opt/itksnap/source /opt/itksnap/itk /opt/itksnap/vtk
         - tar -xzf {{ get_file("itksnap_source") }} -C /opt/itksnap/source --strip-components=1
+        - git -C /opt/itksnap/source init -q
+        - git -C /opt/itksnap/source config user.email arm64-build@localhost
+        - git -C /opt/itksnap/source config user.name arm64-build
+        - git -C /opt/itksnap/source commit --allow-empty -q -m "Build source archive"
+        - python3 -c 'import base64; from pathlib import Path; p=Path("/opt/itksnap/source/CMakeLists.txt"); s=p.read_text(); old=base64.b64decode("cXRfYWRkX3RyYW5zbGF0aW9ucygKICBUQVJHRVRTICR7U05BUF9CVU5ETEVfTkFNRX0KICBTT1VSQ0VfVEFSR0VUUyBpdGtzbmFwdWlfcXQgJHtTTkFQX0JVTkRMRV9OQU1FfQogIFRTX0ZJTEVfRElSIEdVSS9RdC9UcmFuc2xhdGlvbnMKICBUU19GSUxFX0JBU0UgaXRrc25hcAop").decode(); new=base64.b64decode("cXQ2X2FkZF90cmFuc2xhdGlvbnMoCiAgJHtTTkFQX0JVTkRMRV9OQU1FfQogIFRTX0ZJTEVTCiAgICAke1NOQVBfU09VUkNFX0RJUn0vR1VJL1F0L1RyYW5zbGF0aW9ucy9pdGtzbmFwX2RlLnRzCiAgICAke1NOQVBfU09VUkNFX0RJUn0vR1VJL1RyYW5zbGF0aW9ucy9pdGtzbmFwX2VzLnRzCiAgICAke1NOQVBfU09VUkNFX0RJUn0vR1VJL1F0L1RyYW5zbGF0aW9ucy9pdGtzbmFwX3poX0NOLnRzCik=").decode(); assert old in s; s=s.replace(old,new,1); old=base64.b64decode("ICAjIFVzZSBRdCBkZXBsb3ltZW50IHNjcmlwdCB0byB0YWtlIGNhcmUgb2YgcGx1Z2lucwogIHNldChleGVjdXRhYmxlX3BhdGggIiR7U05BUF9NQUlOX0lOU1RBTExfRElSfS8ke1NOQVBfQlVORExFX05BTUV9IikKCiAgcXRfZ2VuZXJhdGVfZGVwbG95X3NjcmlwdCgKICAgICAgVEFSR0VUICR7U05BUF9CVU5ETEVfTkFNRX0KICAgICAgT1VUUFVUX1NDUklQVCBkZXBsb3lfc2NyaXB0CiAgICAgIENPTlRFTlQgIgogIHF0X2RlcGxveV9ydW50aW1lX2RlcGVuZGVuY2llcygKICAgICAgRVhFQ1VUQUJMRSBcIiR7ZXhlY3V0YWJsZV9wYXRofVwiCiAgICAgIEdFTkVSQVRFX1FUX0NPTkYKICAgICAgTElCX0RJUiBcIiR7U05BUF9NQUlOX0lOU1RBTExfRElSfVwiCiAgICAgIFBMVUdJTlNfRElSIFwiJHtTTkFQX01BSU5fSU5TVEFMTF9ESVJ9XCIKICAgICAgVkVSQk9TRQogICkKICBxdF9kZXBsb3lfdHJhbnNsYXRpb25zKAogICAgICBDQVRBTE9HUyBxdGJhc2UKICAgICAgTE9DQUxFUyAke1FUX0kxOE5fVFJBTlNMQVRFRF9MQU5HVUFHRVNfU1RSSU5HfQogICkiKQogIGluc3RhbGwoU0NSSVBUICR7ZGVwbG95X3NjcmlwdH0pCg==").decode(); new=base64.b64decode("ICAjIFF0IDYuNCBpbiBVYnVudHUgMjQuMDQgaGFzIG5vIGRlcGxveW1lbnQtc2NyaXB0IEFQSTsgc3lzdGVtIFF0IHBsdWdpbnMgYXJlIHVzZWQuCg==").decode(); assert old in s; p.write_text(s.replace(old,new,1))'
         - mkdir -p /opt/itksnap/source/Submodules/c3d /opt/itksnap/source/Submodules/greedy /opt/itksnap/source/Submodules/digestible
         - tar -xzf {{ get_file("c3d_source") }} -C /opt/itksnap/source/Submodules/c3d --strip-components=1
         - tar -xzf {{ get_file("greedy_source") }} -C /opt/itksnap/source/Submodules/greedy --strip-components=1
@@ -102,7 +108,7 @@ build:
         - cmake -S /opt/itksnap/source -B /opt/itksnap/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/install -DBUILD_TESTING=OFF -DITK_DIR=/opt/itksnap/itk-install/lib/cmake/ITK-5.4 -DVTK_DIR=/opt/itksnap/vtk-install/lib/cmake/vtk-9.3
         - cmake --build /opt/itksnap/build --parallel
         - cmake --install /opt/itksnap/build
-        - install -m 0755 /opt/itksnap/install/bin/ITK-SNAP /usr/local/bin/itksnap
+        - install -m 0755 /opt/itksnap/install/lib/snap-{{ context.itksnap_source_version }}/ITK-SNAP /usr/local/bin/itksnap
         - install -m 0755 /opt/itksnap/install/bin/c3d /usr/local/bin/c3d
         - install -m 0755 /opt/itksnap/install/bin/c3d_affine_tool /usr/local/bin/c3d_affine_tool
         - install -m 0755 /opt/itksnap/install/bin/greedy /usr/local/bin/greedy
