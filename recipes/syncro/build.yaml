@@ -79,7 +79,8 @@ build:
       run:
         - python3 -m venv /opt/syncro-venv
         - python -m pip install --no-cache-dir --upgrade pip setuptools wheel
-        - python -m pip install --no-cache-dir "numpy=={{ context.numpy_version }}" scipy "torch==2.2.2" --index-url https://download.pytorch.org/whl/cpu
+        - python -m pip install --no-cache-dir "numpy=={{ context.numpy_version }}" scipy
+        - python -m pip install --no-cache-dir "torch==2.2.2" --index-url https://download.pytorch.org/whl/cpu
         - python -m pip install --no-cache-dir --no-binary=antspyx "antspyx==0.5.4" "surfa==0.6.3"
         - mkdir -p /freesurfer/models
         - install -m 0755 {{ get_file("mri_synthstrip") }} /usr/local/bin/mri_synthstrip
