@@ -59,7 +59,7 @@ build:
 
     - condition: arch == "aarch64"
       run:
-        - mkdir -p /opt/bidsvue/src-tauri/crates/datalad-rs /opt/sources
+        - mkdir -p /opt/bidsvue/src-tauri/binaries /opt/bidsvue/src-tauri/crates/datalad-rs /opt/sources
         - tar -xzf {{ get_file("bidsvue_source") }} -C /opt/bidsvue --strip-components=1
         - tar -xzf {{ get_file("datalad_rs_source") }} -C /opt/bidsvue/src-tauri/crates/datalad-rs --strip-components=1
         - tar -xzf {{ get_file("dcm2niix_source") }} -C /opt/sources --strip-components=1
