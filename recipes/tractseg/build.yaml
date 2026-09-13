@@ -5,6 +5,7 @@ name: tractseg
 version: 2.9.post2
 architectures:
   - x86_64
+  - aarch64
 copyright:
   - license: Apache-2.0
     url: https://github.com/MIC-DKFZ/TractSeg/blob/master/LICENSE
@@ -44,13 +45,27 @@ build:
   base-image: ubuntu:22.04
   pkg-manager: apt
   directives:
-    - template:
+    - condition: arch == "x86_64"
+      template:
         name: mrtrix3
         version: 3.0.4
         libtiff_package: libtiff5
-    - template:
+    - condition: arch == "aarch64"
+      template:
+        name: mrtrix3
+        method: source
+        version: 3.0.4
+        libtiff_package: libtiff5
+    - condition: arch == "x86_64"
+      template:
         name: miniconda
         version: py37_23.1.0-1
+        install_path: /opt/miniconda
+        mamba: true
+    - condition: arch == "aarch64"
+      template:
+        name: miniconda
+        version: py311_24.9.2-0
         install_path: /opt/miniconda
         mamba: true
     - install:
@@ -70,8 +85,12 @@ build:
         - pip install TractSeg=={{ context.upstream_version }}
     - run:
         - pip install -q wheel scipy nilearn matplotlib scikit-image nibabel dipy fury joblib seaborn cython
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - pip install -q torch==1.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    - condition: arch == "aarch64"
+      run:
+        - pip install -q torch==2.4.1
     - environment:
         TRACTSEG_WEIGHTS_DIR: /opt/miniconda/share/TractSeg/weights
     - run:
