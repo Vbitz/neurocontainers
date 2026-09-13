@@ -16,6 +16,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   install_path: /opt/napari-{{ context.version }}
@@ -84,11 +85,25 @@ build:
         - python3
         - python3-venv
 
-    - run:
+    - condition: arch=="x86_64"
+      run:
         - python3 -m venv "{{ context.venv_path }}"
         - . "{{ context.venv_path }}/bin/activate"
         - python -m pip install --no-cache-dir --upgrade pip=={{ context.pip_version }} setuptools=={{ context.setuptools_version }} wheel=={{ context.wheel_version }}
         - python -m pip install --no-cache-dir torch=={{ context.torch_version }} torchvision=={{ context.torchvision_version }} --index-url https://download.pytorch.org/whl/{{ context.pytorch_wheel_channel }}
+
+    - condition: arch=="aarch64"
+      run:
+        - python3 -m venv "{{ context.venv_path }}"
+        - . "{{ context.venv_path }}/bin/activate"
+        - python -m pip install --no-cache-dir --upgrade pip=={{ context.pip_version }} setuptools=={{ context.setuptools_version }} wheel=={{ context.wheel_version }}
+        # The official CPU index publishes matching Linux aarch64 wheels for
+        # torch 2.8.0 and torchvision 0.23.0. ARM64 runners have no NVIDIA
+        # device, so retain the documented CPU backend rather than attempting
+        # to install the x86_64 CUDA wheel set.
+        - python -m pip install --no-cache-dir torch=={{ context.torch_version }} torchvision=={{ context.torchvision_version }} --index-url https://download.pytorch.org/whl/cpu
+
+    - run:
         - python -m pip install --no-cache-dir "napari[all]=={{ context.version }}" "napari-voxtell=={{ context.napari_voxtell_version }}" "voxtell=={{ context.voxtell_version }}" "napari-nninteractive[local]=={{ context.napari_nninteractive_version }}" "nnInteractive=={{ context.nninteractive_version }}"
 
     - copy:
