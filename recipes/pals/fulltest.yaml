@@ -9,4 +9,47 @@ tests:
   command: command -v flirt
   expected_exit_code: 0
   expected_output_contains: flirt
+- name: PALS lesion overlap workflow
+  command: |-
+    set -eu
+    work=$(mktemp -d)
+    cp /opt/pals-2.0.1/ROIs/roi_L_CST_2mm.nii.gz "$work/image.nii.gz"
+    cp /opt/pals-2.0.1/ROIs/roi_L_CST_2mm.nii.gz "$work/lesion.nii.gz"
+    cat > "$work/config.json" <<EOF
+    {
+      "session_id": "arm64-fulltest",
+      "im_path": "$work/image.nii.gz",
+      "les_path": "$work/lesion.nii.gz",
+      "out_dir": "$work/out",
+      "run": "pals",
+      "space": "mni",
+      "ants_path": "/opt/ants-2.4.3",
+      "fsl_path": "/opt/miniconda/bin",
+      "rois_path": "/opt/pals-2.0.1/ROIs",
+      "template_directory": "/opt/pals-2.0.1/templates",
+      "out_format": "json",
+      "reg_method": "fsl",
+      "reg_costfn": "corratio",
+      "reg_partmask": false,
+      "reg_nomask": false,
+      "bet_g": -0.25,
+      "gif_duration": 0.5
+    }
+    EOF
+    python /opt/pals-2.0.1/run_pals.py -c "$work/config.json"
+    result=$(find "$work/out/PALS/arm64-fulltest/results" -name '*_desc-lesionload_results.json' -print -quit)
+    test -s "$result"
+    python - "$result" <<'PY'
+    import json
+    import sys
+
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        result = json.load(handle)
+    assert result["PALS_version"] == "2.0.1"
+    assert result["LesionVolume(mm)"] > 0
+    assert result["roi_L_CST_2mm"] > 0
+    print("PALS lesion overlap", result["LesionVolume(mm)"], result["roi_L_CST_2mm"])
+    PY
+  expected_exit_code: 0
+  expected_output_contains: PALS lesion overlap
 upstream_commit: b3699e951ba929d5822bd98a8b65414f075f02a8
