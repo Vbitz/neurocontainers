@@ -111,10 +111,11 @@ build:
       condition: arch == "aarch64"
 
     - run:
-        # brats invokes the binary as "singularity" (brats/core/singularity.py
-        # calls subprocess.run(["singularity", ...]) and spython's Client), which
-        # apptainer does not provide under that name.
+        # The Debian package does not provide the name brats invokes.
         - ln -s "$(command -v apptainer)" /usr/local/bin/singularity
+      condition: arch == "x86_64"
+
+    - run:
         - apptainer --version
         - singularity --version
 
