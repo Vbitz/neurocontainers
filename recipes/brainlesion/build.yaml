@@ -113,6 +113,7 @@ build:
   base-image: ubuntu:24.04
   pkg-manager: apt
   directives:
+    - install: g++
     - template:
         name: miniconda
         version: py310_25.5.1-0
