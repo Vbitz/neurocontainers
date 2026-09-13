@@ -153,7 +153,7 @@ build:
         - chmod 0755 /opt/qupath-source/gradlew
         - cd /opt/qupath-source && ./gradlew --no-daemon clean jpackage -Ppackage=image -x javadoc
         - mkdir -p /usr/local/bin
-        - cp -a /opt/qupath-source/build/dist/QuPath-{{ context.version }} /usr/local/bin/QuPath
+        - cp -a /opt/qupath-source/build/dist/QuPath /usr/local/bin/QuPath
 
     - run:
         - python3 -m venv /opt/cellpose
