@@ -10,3 +10,8 @@ tests:
   - name: fetalsynthseg help
     description: Verify the inference entrypoint runs and prints its usage.
     command: fetalsynthseg --help
+
+  - name: fetalsynthseg runtime dependencies
+    description: Verify the packaged inference dependencies import successfully.
+    command: python3 -c "import torch, monai; print('FetalSynthSeg runtime imports OK')"
+    expected_output_contains: FetalSynthSeg runtime imports OK
