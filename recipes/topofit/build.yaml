@@ -91,6 +91,7 @@ build:
         - ca-certificates
         - git
         - ninja-build
+        - pkg-config
         - python3
         - python3-pip
 
