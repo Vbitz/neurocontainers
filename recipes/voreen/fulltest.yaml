@@ -32,6 +32,9 @@ tests:
   - name: voreentool has no missing shared libraries
     command: assert_linked "$(command -v voreentool)"
     expected_exit_code: 0
+  - name: voreentool starts headless and reports usage
+    command: voreentool -platform minimal --help 2>&1 | grep -Eiq 'usage|voreen'
+    expected_exit_code: 0
   - name: libefsw.so exists
     command: test -f /usr/share/voreen/libefsw.so
     expected_exit_code: 0
