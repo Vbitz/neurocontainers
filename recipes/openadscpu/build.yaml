@@ -117,6 +117,13 @@ build:
   pkg-manager: apt
   directives:
     - install: git libgomp1 build-essential
+    - condition: arch == "aarch64"
+      install:
+        - cmake
+        - libjpeg-dev
+        - libpng-dev
+        - libtiff-dev
+        - zlib1g-dev
     - template:
         name: miniconda
         version: latest
