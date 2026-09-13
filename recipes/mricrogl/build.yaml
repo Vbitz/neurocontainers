@@ -1,12 +1,17 @@
 name: mricrogl
 version: 1.2.20211006
 
+variables:
+  metal_demos_revision: 5ddd15005f7eb9a48620cf74ebd929dc11f83c73
+  dcm2niix_version: 1.0.20211006
+
 copyright:
   - name: mricrogl license
     url: https://github.com/rordenlab/MRIcroGL/blob/master/license.txt
     
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: github_release
@@ -32,14 +37,46 @@ build:
         - libglu1-mesa
         - pigz
 
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - cmake
+        - fpc
+        - lazarus
+        - lcl-qt5
+        - libgl1-mesa-dev
+        - libqt5pas-dev
+        - pkg-config
+
+    - condition: arch == "aarch64"
+      workdir: /opt
+
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("mricrogl_source") }}
+        - mv MRIcroGL-{{ context.version }} MRIcroGL
+        - tar -xzf {{ get_file("metal_demos_source") }}
+        - mv Metal-Demos-{{ context.metal_demos_revision }} Metal-Demos
+        - tar -xzf {{ get_file("dcm2niix_source") }}
+        - cd dcm2niix-{{ context.dcm2niix_version }}/console
+        - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        - cmake --build build --parallel
+        - install -m 0755 build/bin/dcm2niix /opt/MRIcroGL/Resources/dcm2niix
+        - cd /opt/MRIcroGL
+        - lazbuild --build-ide= --add-package lazopenglcontext MRIcroGL_NoPython.lpi
+        - lazbuild -B --ws=qt5 MRIcroGL_NoPython.lpi
+        - cp MRIcroGL MRIcroGL_QT
+
     - workdir: /opt
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file("v") }} MRIcroGL_linux_includes_Python.zip
         - unzip MRIcroGL_linux_includes_Python.zip
         - rm -rf MRIcroGL_linux_includes_Python.zip
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file("libqt5pas1_2_9_0_amd64_deb") }} libqt5pas1_2.9-0_amd64.deb
         - apt install ./libqt5pas1_2.9-0_amd64.deb
         - rm -rf libqt5pas1_2.9-0_amd64.deb
@@ -83,7 +120,24 @@ gui_apps:
 
 files:
   - name: v
+    condition: arch == "x86_64"
     url: https://github.com/rordenlab/MRIcroGL/releases/download/v{{ context.version }}/MRIcroGL_linux_includes_Python.zip
 
   - name: libqt5pas1_2_9_0_amd64_deb
+    condition: arch == "x86_64"
     url: https://github.com/davidbannon/libqt5pas/releases/download/v1.2.9/libqt5pas1_2.9-0_amd64.deb
+
+  - name: mricrogl_source
+    condition: arch == "aarch64"
+    url: https://github.com/rordenlab/MRIcroGL/archive/refs/tags/v{{ context.version }}.tar.gz
+    sha256: a10d5b3e1ff3ff549bb55a4aa1e7f456258d8fa0f2bffccac3a4387b74eb0813
+
+  - name: metal_demos_source
+    condition: arch == "aarch64"
+    url: https://github.com/neurolabusc/Metal-Demos/archive/{{ context.metal_demos_revision }}.tar.gz
+    sha256: 9ed4f7edb0f70d96359f43becabada50789a595c12638bc65b6dedb942f4bf7a
+
+  - name: dcm2niix_source
+    condition: arch == "aarch64"
+    url: https://github.com/rordenlab/dcm2niix/archive/refs/tags/v{{ context.dcm2niix_version }}.tar.gz
+    sha256: 44b737d0101483de17ac1273f2d2c6a4d572a7b76ea040d69aa34d5e484144b9
