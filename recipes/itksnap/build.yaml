@@ -4,6 +4,15 @@ version: 4.4.0
 # they started including the build date: e.g. 20241202
 architectures:
   - x86_64
+  - aarch64
+
+variables:
+  itksnap_source_revision: 1ebe25defacf051fd9f4d4f0f93b748138c92716
+  itk_version: 5.4.3
+  vtk_version: 9.3.1
+  c3d_revision: d4d963629d7dfdca4b0607907f0e91827c22ea2a
+  greedy_revision: 2d5dfa1891ac726524495d4ca8a3461be86c12f5
+  digestible_revision: 1b66709e99c43d280bb472e1a0e36185ef2ea412
 structured_readme:
   description: |
     itksnap is an image viewer for DICOM and NII files and supports manual segmentation of data.
@@ -21,15 +30,82 @@ build:
   pkg-manager: apt
   directives:
     - install: curl ca-certificates unzip binutils libqt5gui5 libopengl0 libxcb-cursor0 libxcb-cursor-dev
-    - workdir: /opt/itksnap-{{ context.version }}
-    - run:
+    - condition: arch == "x86_64"
+      workdir: /opt/itksnap-{{ context.version }}
+    - condition: arch == "x86_64"
+      run:
         - cp {{ get_file("MRI_crop_zip") }} /example_data.zip
         - unzip /example_data.zip
         - rm /example_data.zip
         - tar -xz --strip-components=1 -C /opt/itksnap-{{ context.version }} -f {{ get_file("downloaded_tar_file") }}
-    - environment:
+    - condition: arch == "x86_64"
+      environment:
         QT_QPA_PLATFORM: xcb
         PATH: $PATH:/opt/itksnap-{{ context.version }}/bin
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - cmake
+        - file
+        - git
+        - libcurl4-openssl-dev
+        - libfontconfig1-dev
+        - libfreetype6-dev
+        - libgl1-mesa-dev
+        - libglu1-mesa-dev
+        - libqt6opengl6-dev
+        - libssh-dev
+        - libx11-dev
+        - libx11-xcb-dev
+        - libxcb-cursor-dev
+        - libxcb-image0-dev
+        - libxcb-icccm4-dev
+        - libxcb-keysyms1-dev
+        - libxcb-render-util0-dev
+        - libxcb-xinerama0-dev
+        - libxcb-xkb-dev
+        - libxext-dev
+        - libxfixes-dev
+        - libxi-dev
+        - libxkbcommon-dev
+        - libxkbcommon-x11-dev
+        - libxrender-dev
+        - libxtst-dev
+        - ninja-build
+        - qt6-base-dev
+        - qt6-declarative-dev
+        - qt6-tools-dev
+        - qt6-tools-dev-tools
+        - zlib1g-dev
+    - condition: arch == "aarch64"
+      workdir: /opt/itksnap
+    - condition: arch == "aarch64"
+      environment:
+        QT_QPA_PLATFORM: xcb
+        PATH: $PATH:/usr/local/bin
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /opt/itksnap/source /opt/itksnap/itk /opt/itksnap/vtk
+        - tar -xzf {{ get_file("itksnap_source") }} -C /opt/itksnap/source --strip-components=1
+        - mkdir -p /opt/itksnap/source/Submodules/c3d /opt/itksnap/source/Submodules/greedy /opt/itksnap/source/Submodules/digestible
+        - tar -xzf {{ get_file("c3d_source") }} -C /opt/itksnap/source/Submodules/c3d --strip-components=1
+        - tar -xzf {{ get_file("greedy_source") }} -C /opt/itksnap/source/Submodules/greedy --strip-components=1
+        - tar -xzf {{ get_file("digestible_source") }} -C /opt/itksnap/source/Submodules/digestible --strip-components=1
+        - tar -xzf {{ get_file("itk_source") }} -C /opt/itksnap/itk --strip-components=1
+        - cmake -S /opt/itksnap/itk -B /opt/itksnap/itk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/itk-install -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DModule_MorphologicalContourInterpolation=ON
+        - cmake --build /opt/itksnap/itk-build --parallel
+        - cmake --install /opt/itksnap/itk-build
+        - tar -xzf {{ get_file("vtk_source") }} -C /opt/itksnap/vtk --strip-components=1
+        - cmake -S /opt/itksnap/vtk -B /opt/itksnap/vtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/vtk-install -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DVTK_RENDERING_BACKEND=OpenGL2 -DVTK_GROUP_ENABLE_Qt=YES -DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick=NO -DVTK_MODULE_ENABLE_VTK_GUISupportQtSQL=NO -DCMAKE_PREFIX_PATH=/usr/lib/aarch64-linux-gnu/cmake/Qt6
+        - cmake --build /opt/itksnap/vtk-build --parallel
+        - cmake --install /opt/itksnap/vtk-build
+        - cmake -S /opt/itksnap/source -B /opt/itksnap/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/install -DBUILD_TESTING=OFF -DITK_DIR=/opt/itksnap/itk-install/lib/cmake/ITK-5.4 -DVTK_DIR=/opt/itksnap/vtk-install/lib/cmake/vtk-9.3
+        - cmake --build /opt/itksnap/build --parallel
+        - cmake --install /opt/itksnap/build
+        - install -m 0755 /opt/itksnap/install/bin/ITK-SNAP /usr/local/bin/itksnap
+        - install -m 0755 /opt/itksnap/install/bin/c3d /usr/local/bin/c3d
+        - install -m 0755 /opt/itksnap/install/bin/c3d_affine_tool /usr/local/bin/c3d_affine_tool
+        - install -m 0755 /opt/itksnap/install/bin/greedy /usr/local/bin/greedy
     - deploy:
         bins:
           - itksnap
@@ -78,6 +154,26 @@ copyright:
 # locate libQt6Core.so.6
 files:
   - name: downloaded_tar_file
+    condition: arch == "x86_64"
     url: https://sourceforge.net/projects/itk-snap/files/itk-snap/{{ context.version }}/itksnap-{{ context.version }}-20250909-Linux-x86_64.tar.gz
   - name: MRI_crop_zip
+    condition: arch == "x86_64"
     url: https://www.nitrc.org/frs/download.php/750/MRI-crop.zip
+  - name: itksnap_source
+    condition: arch == "aarch64"
+    url: https://github.com/pyushkevich/itksnap/archive/{{ context.itksnap_source_revision }}.tar.gz
+  - name: c3d_source
+    condition: arch == "aarch64"
+    url: https://github.com/pyushkevich/c3d/archive/{{ context.c3d_revision }}.tar.gz
+  - name: greedy_source
+    condition: arch == "aarch64"
+    url: https://github.com/pyushkevich/greedy/archive/{{ context.greedy_revision }}.tar.gz
+  - name: digestible_source
+    condition: arch == "aarch64"
+    url: https://github.com/pyushkevich/digestible/archive/{{ context.digestible_revision }}.tar.gz
+  - name: itk_source
+    condition: arch == "aarch64"
+    url: https://github.com/InsightSoftwareConsortium/ITK/releases/download/v{{ context.itk_version }}/InsightToolkit-{{ context.itk_version }}.tar.gz
+  - name: vtk_source
+    condition: arch == "aarch64"
+    url: https://github.com/Kitware/VTK/archive/refs/tags/v{{ context.vtk_version }}.tar.gz
