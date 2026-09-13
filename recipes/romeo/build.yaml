@@ -42,8 +42,12 @@ build:
         - ln -s /opt/julia-1.9.4 /opt/julia
         - tar -xzf {{ get_file("romeo_julia_source_tar_gz") }} -C /opt/romeo-{{ context.version }} --strip-components 1
         - /opt/julia/bin/julia --project=/opt/romeo-{{ context.version }} -e 'using Pkg; Pkg.add(["ArgParse", "MriResearchTools"]); Pkg.precompile()'
-        - printf '%s\n' '#!/usr/bin/env bash' 'if [ "$#" -eq 1 ] && [ "$1" = "--version" ]; then echo "v3.2.8 (ROMEO.jl v1.6.0)"; exit 0; fi' 'exec /opt/julia/bin/julia --project=/opt/romeo-3.2.8 /opt/romeo-3.2.8/romeo.jl "$@"' > /opt/romeo-{{ context.version }}/bin/romeo
+        - printf '%s\n' '#!/usr/bin/env bash' 'if [ "$#" -eq 1 ] && [ "$1" = "--version" ]; then echo "v3.2.8 (ROMEO.jl v1.6.0)"; exit 0; fi' 'exec /opt/julia/bin/julia --project=/opt/romeo-3.2.8 /opt/romeo-3.2.8/romeo-arm64.jl "$@"' > /opt/romeo-{{ context.version }}/bin/romeo
         - chmod 0755 /opt/romeo-{{ context.version }}/bin/romeo
+    - condition: arch == "aarch64"
+      copy:
+        - romeo_arm64_jl
+        - /opt/romeo-{{ context.version }}/romeo-arm64.jl
 
     - condition: arch == "x86_64"
       environment:
@@ -105,3 +109,12 @@ files:
     condition: arch == "aarch64"
     url: https://julialang-s3.julialang.org/bin/linux/aarch64/1.9/julia-1.9.4-linux-aarch64.tar.gz
     sha256: 541d0c5a9378f8d2fc384bb8595fc6ffe20d61054629a6e314fb2f8dfe2f2ade
+  - name: romeo_arm64_jl
+    filename: romeo-arm64.jl
+    contents: |
+      import Pkg
+      Pkg.activate(@__DIR__)
+      using ROMEO, MriResearchTools, ArgParse
+      include(joinpath(@__DIR__, "ext", "RomeoApp", "RomeoApp.jl"))
+      @time msg = ROMEO.unwrapping_main(ARGS)
+      println(msg)
