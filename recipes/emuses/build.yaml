@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   install_path: /opt/{{ context.name }}-{{ context.version }}
@@ -41,6 +42,16 @@ build:
         - python -m pip install --no-cache-dir --upgrade pip setuptools wheel pip-tools
         - mkdir -p "{{ context.install_path }}" /tmp/emuses-src /tmp/emuses/jobs
         - tar -xzf {{ get_file("emuses_source") }} --strip-components=1 -C /tmp/emuses-src
+        # requirements-prod.txt is compiled on x86_64 and contains the CUDA
+        # dependency closure as unconditional pins. PyTorch 2.7.1 publishes a
+        # native Linux ARM64 wheel, while its NVIDIA and Triton dependencies
+        # are explicitly x86_64-only. Remove only those generated lock entries
+        # on ARM; keep the exact lock and CUDA path on x86_64.
+        - >-
+          if [ "$(uname -m)" = "aarch64" ]; then
+          sed -i -E '/^(nvidia-|triton==)/d; /^[[:space:]]+#/d'
+          /tmp/emuses-src/requirements-prod.txt;
+          fi
         - pip-sync /tmp/emuses-src/requirements-prod.txt
         - python -m pip install --no-cache-dir --no-deps /tmp/emuses-src
         - cp -a /tmp/emuses-src/README.md "{{ context.install_path }}/README.md"
