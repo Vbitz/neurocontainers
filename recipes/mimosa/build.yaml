@@ -1,5 +1,11 @@
 variables:
   upstream_commit: f88183050862becbf53769b1866c48dcf8840efe
+  fsl_version:
+    try:
+      - value: 6.0.7.16
+        condition: arch == "x86_64"
+      - value: 6.0.7.22
+        condition: arch == "aarch64"
 
 name: mimosa
 version: 0.5.8
@@ -8,6 +14,7 @@ copyright:
   url: https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
 architectures:
 - x86_64
+- aarch64
 structured_readme:
   description: Trains and makes predictions from the 'MIMoSA' method
   example: mimosa_model
@@ -60,7 +67,7 @@ build:
   directives:
   - template:
       name: fsl
-      version: 6.0.7.16
+      version: "{{ context.fsl_version }}"
 
   # ----------------------------------------------------------------------
   # System libraries.
