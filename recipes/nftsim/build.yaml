@@ -2,30 +2,43 @@ name: nftsim
 version: 1.0.2
 architectures:
   - x86_64
+  - aarch64
 structured_readme:
   description: NFTsim is a neural field simulation framework for large-scale brain dynamics. This container allows users to simulate various neural models including corticothalamic and cortical circuits using configuration files.
   example: nftsim -i /app/configs/eirs-corticothalamic.conf -o eirs-corticothalamic.output
   documentation: https://github.com/BrainDynamicsUSYD/nftsim
   citation: ''
 variables:
-  base_image_tag: 1.0.2
+  source_commit: 0bd35df203e9e713018ce94c45119f1c794d61a2
 
 auto_update:
   method: sources
   sources:
-    - id: base_image_tag
-      method: oci
-      url: https://ghcr.io/v2/farwa-abbas/nftsim/tags/list
-      version_regex: '(?P<version>\d+\.\d+\.\d+)'
+    - id: source
+      method: github_commit
+      repo: BrainDynamicsUSYD/nftsim
+      ref: master
       target:
-        variable: base_image_tag
-        value: tag
+        variable: source_commit
 
 build:
   kind: neurodocker
-  base-image: ghcr.io/farwa-abbas/nftsim:{{ context.base_image_tag }}
+  base-image: "{{ 'ghcr.io/farwa-abbas/nftsim:1.0.2' if arch == 'x86_64' else 'debian:bookworm' }}"
   pkg-manager: apt
   directives:
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+    - condition: arch == "aarch64"
+      workdir: /tmp
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf '{{ get_file("source") }}' -C /tmp
+        - make -C /tmp/nftsim-{{ context.source_commit }} CXXFLAGS='-std=c++11 -lm -Wall -Wextra -pedantic -O3' nftsim
+        - mkdir -p /app/bin /app/configs
+        - cp /tmp/nftsim-{{ context.source_commit }}/bin/nftsim /app/bin/nftsim
+        - cp -a /tmp/nftsim-{{ context.source_commit }}/configs/. /app/configs/
+        - rm -rf /tmp/nftsim-{{ context.source_commit }}
     - environment:
         PATH: /app/bin:$PATH
     - workdir: /app
@@ -73,6 +86,12 @@ build:
           echo "All tests passed successfully!"
           exit 0
 icon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAmlJREFUSEvllV1IU2EYx39nO9Ol0+bmV2OKlSbrJvHKCNNVEEJ2ISIOdpOVBOK9trooqBulEALropJFFwVRF12si31I131c2qhdhNJGbay1g+3jbHEmSmuuTpk39XIuDu/hOb/3ef7P83+FjL89j9qlrWYqcI7PiaTaCIR/D5DPgyCUqcBWS5TLw9vlNPVGLaYabSnlbwAWX68SS8icPFSNTvwhla0AsnKeJ88lHJfChZNbG0TuTjfR1VHJ9Ydxrt6LFfZrjSYS8bX3zVZDcwt9A6MYzY2FzxtdtA64GegkEAgQCoW4MN7FlLOOB74k+45eY3h4GIu1lbOnTzE7O1vyf0mS2N1uUwdQoicnJ6mK3edjXMY+eoOhoaECYPzMGDMzM/T39yPL8gYomUyyEo6qAwSDQdra2jCbzSiBbre7BCCKYhFAIakuUW9vL36/H4/Hw+Dg4KaA+fn5IsDc3ByWvd207+9Go13rwrIa2Gw2nE4nLpeLnp4eJiYmSjJIp9NFOjgcDj5JonrA0tISkUiEbDaL1+tVVaLDx0d+D2C32/H5fESjUfR6fZHIigZdB49R32gFQXkEDLV17DTVIwiaX5fogGWZl8EUt9zPUEBKG37fRTW1RvoGHDS37EEo4y8/1eDiSBxpNcf0HZlwOEwqlSqagz8CrE+ykt/jK7vo7qzk8kKM208TJZO8o8rAkRNOdRkoRhdayRD6kCGXA40GOqw6Wpt0vI9kePEmxaPFr0R0dir0BsSKCjSCpmAJ1TXGstah+sKRc/DqncBCcAwZcXtutCxVnA+M80Va3R4AW7FrVUf6LwHfAA+Ur1jBngS7AAAAAElFTkSuQmCC
+files:
+  - name: source
+    condition: arch == "aarch64"
+    url: https://github.com/BrainDynamicsUSYD/nftsim/archive/{{ context.source_commit }}.tar.gz
+    sha256: 7f61425f2f88c87f2416474e7630cd899e5508983082a1a540a92c6d9699538d
+
 categories:
   - programming
   - hippocampus
