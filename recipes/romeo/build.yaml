@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: github_release
@@ -23,13 +24,38 @@ build:
         - curl
         - ca-certificates
 
-    - workdir: /opt/romeo-{{ context.version }}/
+    - condition: arch == "x86_64"
+      workdir: /opt/romeo-{{ context.version }}/
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - tar -xz -C /opt/romeo-{{ context.version }}/ --strip-components 1 -f {{ get_file("romeo_linux_3_2_8_tar_gz") }}
 
-    - environment:
+    - condition: arch == "aarch64"
+      install:
+        - libatomic1
+
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /opt/romeo-{{ context.version }}/bin
+        - tar -xzf {{ get_file("julia_aarch64_tar_gz") }} -C /opt
+        - ln -s /opt/julia-1.9.4 /opt/julia
+        - tar -xzf {{ get_file("romeo_julia_source_tar_gz") }} -C /opt/romeo-{{ context.version }} --strip-components 1
+        - /opt/julia/bin/julia --project=/opt/romeo-{{ context.version }} -e 'using Pkg; Pkg.add(["ArgParse", "MriResearchTools"]); Pkg.precompile()'
+        - printf '%s\n' '#!/usr/bin/env bash' 'if [ "$#" -eq 1 ] && [ "$1" = "--version" ]; then echo "v3.2.8 (ROMEO.jl v1.6.0)"; exit 0; fi' 'exec /opt/julia/bin/julia --project=/opt/romeo-3.2.8 /opt/romeo-3.2.8/romeo-arm64.jl "$@"' > /opt/romeo-{{ context.version }}/bin/romeo
+        - chmod 0755 /opt/romeo-{{ context.version }}/bin/romeo
+    - condition: arch == "aarch64"
+      copy:
+        - romeo_arm64_jl
+        - /opt/romeo-{{ context.version }}/romeo-arm64.jl
+
+    - condition: arch == "x86_64"
+      environment:
         PATH: /opt/romeo-{{ context.version }}/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:~/.local/bin
+
+    - condition: arch == "aarch64"
+      environment:
+        PATH: /opt/julia/bin:/opt/romeo-{{ context.version }}/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:~/.local/bin
 
 deploy:
   path:
@@ -75,3 +101,20 @@ icon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAACXBI
 files:
   - name: romeo_linux_3_2_8_tar_gz
     url: https://github.com/korbinian90/ROMEO/releases/download/v{{ context.version }}/romeo_linux_{{ context.version }}.tar.gz
+  - name: romeo_julia_source_tar_gz
+    condition: arch == "aarch64"
+    url: https://github.com/korbinian90/ROMEO.jl/archive/refs/tags/v1.6.0.tar.gz
+    sha256: 1c29b2417e1534ee276d429fa6686fb3ebc1e963094c8dffccae6d74436df3f0
+  - name: julia_aarch64_tar_gz
+    condition: arch == "aarch64"
+    url: https://julialang-s3.julialang.org/bin/linux/aarch64/1.9/julia-1.9.4-linux-aarch64.tar.gz
+    sha256: 541d0c5a9378f8d2fc384bb8595fc6ffe20d61054629a6e314fb2f8dfe2f2ade
+  - name: romeo_arm64_jl
+    filename: romeo-arm64.jl
+    contents: |
+      import Pkg
+      Pkg.activate(@__DIR__)
+      using ROMEO, MriResearchTools, ArgParse
+      include(joinpath(@__DIR__, "ext", "RomeoApp", "RomeoApp.jl"))
+      @time msg = ROMEO.unwrapping_main(ARGS)
+      println(msg)
