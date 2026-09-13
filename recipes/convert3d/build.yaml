@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -16,6 +17,7 @@ auto_update:
     url: https://sourceforge.net/projects/c3d/files/c3d/Nightly/c3d-nightly-Linux-x86_64.tar.gz/download
     target:
       file: archive
+
 build:
   kind: neurodocker
 
@@ -26,12 +28,28 @@ build:
     - install:
       - ca-certificates
       - curl
+
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
+        - cmake
+        - libinsighttoolkit5-dev
     - environment:
         C3DPATH: /opt/convert3d-nightly
         PATH: /opt/convert3d-nightly/bin:$PATH
-    - run:
-      - mkdir -p /opt/convert3d-nightly
-      - tar -xzf {{ get_file("archive") }} -C /opt/convert3d-nightly --strip-components 1
+    - condition: arch == "x86_64"
+      run:
+        - mkdir -p /opt/convert3d-nightly
+        - tar -xzf {{ get_file("archive") }} -C /opt/convert3d-nightly --strip-components 1
+
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /tmp/c3d-src /tmp/c3d-build
+        - tar -xzf {{ get_file("source") }} -C /tmp/c3d-src --strip-components 1
+        - cmake -S /tmp/c3d-src -B /tmp/c3d-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/convert3d-nightly -DCONVERT3D_USE_ITK_REMOTE_MODULES=OFF
+        - cmake --build /tmp/c3d-build --parallel
+        - cmake --install /tmp/c3d-build
+        - rm -rf /tmp/c3d-src /tmp/c3d-build
 deploy:
   bins:
     - c3d 
@@ -43,5 +61,10 @@ variables:
   upstream_version: 1.1.0
 files:
 - name: archive
+  condition: arch == "x86_64"
   url: https://sourceforge.net/projects/c3d/files/c3d/Nightly/c3d-nightly-Linux-x86_64.tar.gz/download
   sha256: b5a59156cfc25100a2a0f9af65d6f0aba48d8f919658deb836fb6480511c074e
+- name: source
+  condition: arch == "aarch64"
+  url: https://github.com/pyushkevich/c3d/archive/197e3047ceea9f61b00290ac6fc36c9d2b0cff68.tar.gz
+  sha256: 4125f041ec8a669a153479795c04ffa27f09672cf3d59ac0fe1736fc00c79654
