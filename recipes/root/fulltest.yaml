@@ -1,5 +1,5 @@
 # ROOT (CERN Data Analysis Framework) container test suite
-# Tests for ROOT 6.22.02 - Object-oriented framework for large scale data analysis
+# Tests for ROOT 6.30.02 - Object-oriented framework for large scale data analysis
 #
 # ROOT is developed by CERN and provides:
 #   - Data processing and analysis capabilities
@@ -11,7 +11,7 @@
 #   - RooFit for statistical modeling
 
 name: root
-version: 6.22.02
+version: 6.30.02
 
 test_data:
   output_dir: test_output

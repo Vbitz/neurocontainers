@@ -1,5 +1,5 @@
 name: root
-version: 6.22.02
+version: 6.30.02
 
 copyright:
   - license: LGPL-2.1+
@@ -7,16 +7,17 @@ copyright:
     
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: dockerhub
   repo: rootproject/root
-  version_regex: ^(?P<version>\d+(?:\.\d+)+)-centos7$
+  version_regex: ^(?P<version>\d+(?:\.\d+)+)-(?:centos7|ubuntu22\.04)$
 
 build:
   kind: neurodocker
 
-  base-image: rootproject/root:{{ context.version }}-centos7
+  base-image: "{% if context.arch == 'aarch64' %}rootproject/root:{{ context.version }}-conda{% else %}rootproject/root:{{ context.version }}-ubuntu22.04{% endif %}"
   pkg-manager: yum
 
   directives: []
