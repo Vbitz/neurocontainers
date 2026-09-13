@@ -96,7 +96,7 @@ build:
         - cmake --build /opt/itksnap/itk-build --parallel
         - cmake --install /opt/itksnap/itk-build
         - tar -xzf {{ get_file("vtk_source") }} -C /opt/itksnap/vtk --strip-components=1
-        - cmake -S /opt/itksnap/vtk -B /opt/itksnap/vtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/vtk-install -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DVTK_RENDERING_BACKEND=OpenGL2 -DVTK_GROUP_ENABLE_Qt=YES -DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick=NO -DVTK_MODULE_ENABLE_VTK_GUISupportQtSQL=NO -DCMAKE_PREFIX_PATH=/usr/lib/aarch64-linux-gnu/cmake/Qt6
+        - cmake -S /opt/itksnap/vtk -B /opt/itksnap/vtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/vtk-install -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DVTK_RENDERING_BACKEND=OpenGL2 -DVTK_GROUP_ENABLE_Qt=YES -DVTK_MODULE_ENABLE_VTK_RenderingExternal=YES -DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick=NO -DVTK_MODULE_ENABLE_VTK_GUISupportQtSQL=NO -DCMAKE_PREFIX_PATH=/usr/lib/aarch64-linux-gnu/cmake/Qt6
         - cmake --build /opt/itksnap/vtk-build --parallel
         - cmake --install /opt/itksnap/vtk-build
         - cmake -S /opt/itksnap/source -B /opt/itksnap/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itksnap/install -DBUILD_TESTING=OFF -DITK_DIR=/opt/itksnap/itk-install/lib/cmake/ITK-5.4 -DVTK_DIR=/opt/itksnap/vtk-install/lib/cmake/vtk-9.3
