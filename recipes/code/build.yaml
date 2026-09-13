@@ -1,5 +1,30 @@
 variables:
-  vscode_version: "1.136.1"
+  vscode_amd64_version: "1.136.1"
+  vscode_arm64_version: "1.136.1"
+  vscode_version:
+    try:
+      - value: "{{ context.vscode_amd64_version }}"
+        condition: arch=="x86_64"
+      - value: "{{ context.vscode_arm64_version }}"
+        condition: arch=="aarch64"
+  vscode_platform:
+    try:
+      - value: x64
+        condition: arch=="x86_64"
+      - value: arm64
+        condition: arch=="aarch64"
+  julia_platform:
+    try:
+      - value: x86_64
+        condition: arch=="x86_64"
+      - value: aarch64
+        condition: arch=="aarch64"
+  go_platform:
+    try:
+      - value: amd64
+        condition: arch=="x86_64"
+      - value: arm64
+        condition: arch=="aarch64"
   julia_version: 1.6.3
   go_version: 1.17.2
   singularity_version: 3.9.3
@@ -9,16 +34,25 @@ version: "240320"
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
   local: []
   sources:
-  - id: vscode
+  - id: vscode-amd64
     method: webpage
     target:
-      variable: vscode_version
+      variable: vscode_amd64_version
+      fulltest_variable: vscode_amd64_version
     url: https://update.code.visualstudio.com/api/update/linux-x64/stable/latest
+    version_regex: '"productVersion":\s*"(?P<version>\d+(?:\.\d+)+)"'
+  - id: vscode-arm64
+    method: webpage
+    target:
+      variable: vscode_arm64_version
+      fulltest_variable: vscode_arm64_version
+    url: https://update.code.visualstudio.com/api/update/linux-deb-arm64/stable/latest
     version_regex: '"productVersion":\s*"(?P<version>\d+(?:\.\d+)+)"'
   - id: julia
     method: github_release
@@ -108,9 +142,9 @@ build:
     - workdir: /opt
 
     - run:
-        - cp {{ get_file("julia_1_6_3_linux_x86_64_tar_gz") }} julia-{{ context.julia_version }}-linux-x86_64.tar.gz
-        - tar zxvf julia-{{ context.julia_version }}-linux-x86_64.tar.gz
-        - rm -rf julia-{{ context.julia_version }}-linux-x86_64.tar.gz
+        - cp {{ get_file("julia_archive") }} julia-{{ context.julia_version }}-linux-{{ context.julia_platform }}.tar.gz
+        - tar zxvf julia-{{ context.julia_version }}-linux-{{ context.julia_platform }}.tar.gz
+        - rm -rf julia-{{ context.julia_version }}-linux-{{ context.julia_platform }}.tar.gz
         - ln -s /opt/julia-{{ context.julia_version }} /opt/julia-latest
 
     - run:
@@ -130,9 +164,9 @@ build:
         GOPATH: $HOME/go
 
     - run:
-        - cp {{ get_file("go1_17_2_linux_amd64_tar_gz") }} go{{ context.go_version }}.linux-amd64.tar.gz
-        - tar -C /usr/local -xzvf go{{ context.go_version }}.linux-amd64.tar.gz
-        - rm go{{ context.go_version }}.linux-amd64.tar.gz
+        - cp {{ get_file("go_archive") }} go{{ context.go_version }}.linux-{{ context.go_platform }}.tar.gz
+        - tar -C /usr/local -xzvf go{{ context.go_version }}.linux-{{ context.go_platform }}.tar.gz
+        - rm go{{ context.go_version }}.linux-{{ context.go_platform }}.tar.gz
 
     - environment:
         PATH: $PATH:/usr/local/go/bin:$GOPATH/bin
@@ -187,13 +221,13 @@ readme: |
 
 files:
   - name: download
-    url: https://update.code.visualstudio.com/{{ context.vscode_version }}/linux-deb-x64/stable
+    url: https://update.code.visualstudio.com/{{ context.vscode_version }}/linux-deb-{{ context.vscode_platform }}/stable
 
-  - name: julia_1_6_3_linux_x86_64_tar_gz
-    url: https://julialang-s3.julialang.org/bin/linux/x64/{{ context.julia_version.split(".")[:2] | join(".") }}/julia-{{ context.julia_version }}-linux-x86_64.tar.gz
+  - name: julia_archive
+    url: https://julialang-s3.julialang.org/bin/linux/{{ context.julia_platform }}/{{ context.julia_version.split(".")[:2] | join(".") }}/julia-{{ context.julia_version }}-linux-{{ context.julia_platform }}.tar.gz
 
-  - name: go1_17_2_linux_amd64_tar_gz
-    url: https://dl.google.com/go/go{{ context.go_version }}.linux-amd64.tar.gz
+  - name: go_archive
+    url: https://dl.google.com/go/go{{ context.go_version }}.linux-{{ context.go_platform }}.tar.gz
   - name: code
     contents: |
       #\!/usr/bin/env sh
