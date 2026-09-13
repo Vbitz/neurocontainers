@@ -63,6 +63,7 @@ build:
         - cmake --build build --parallel
         - install -m 0755 build/dcm2niix /opt/MRIcroGL/Resources/dcm2niix
         - cd /opt/MRIcroGL
+        - sed -i '/<TargetProcessor Value="ATHLON64"\/>/d; s/<TargetCPU Value="x86_64"\/>/<TargetCPU Value="aarch64"\/>/' MRIcroGL_NoPython.lpi
         - lazbuild --build-ide= --add-package lazopenglcontext MRIcroGL_NoPython.lpi
         - lazbuild -B --ws=qt5 MRIcroGL_NoPython.lpi
         - cp MRIcroGL MRIcroGL_QT
