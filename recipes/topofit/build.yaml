@@ -13,6 +13,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   openrecon_server_commit: "33362f2139701fbf5ea855808a325eb59b7db2ae"
@@ -27,6 +28,7 @@ variables:
   brainsynth_wheel_url: https://github.com/simnibs/brainsynth/releases/download/v{{ context.brainsynth_version }}/brainsynth-{{ context.brainsynth_version
     }}-py3-none-any.whl
   cortech_wheel_url: https://github.com/simnibs/cortech/releases/download/v{{ context.cortech_version }}/cortech-{{ context.cortech_version }}-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
+  cortech_source_url: https://github.com/simnibs/cortech/archive/refs/tags/v{{ context.cortech_version }}.tar.gz
 
 auto_update:
   method: sources
@@ -75,7 +77,7 @@ auto_update:
 
 build:
   kind: neurodocker
-  base-image: pytorch/pytorch:2.6.0-cuda11.8-cudnn9-runtime
+  base-image: "{% if context.arch == 'aarch64' %}ubuntu:24.04{% else %}pytorch/pytorch:2.6.0-cuda11.8-cudnn9-runtime{% endif %}"
   pkg-manager: apt
 
   directives:
@@ -93,10 +95,31 @@ build:
 
     - include: macros/openrecon/neurodocker.yaml
 
-    - run:
+    - condition: arch=="x86_64"
+      run:
         - python3 -m pip install --no-cache-dir "numpy==2.1.3" "scipy==1.15.1" "nibabel==5.3.2" "numba==0.61.0" "pytorch-ignite==0.5.2" "tqdm==4.67.1" "pillow==11.0.0"
         - python3 -m pip install --no-cache-dir --no-deps {{ get_file("cortech_wheel") }} {{ get_file("brainsynth_wheel") }} {{ get_file("brainnet_wheel") }}
         - python3 -c "import brainnet, brainsynth, cortech, torch; print('BrainNet imports with torch', torch.__version__)"
+        - python3 -c "from importlib.resources import files; assert files('brainnet').joinpath('resources/models/topofit/t1w_1mm_state.pt').is_file()"
+
+    - condition: arch=="aarch64"
+      run:
+        # The ARM64 base is the multi-architecture Ubuntu image. The official
+        # PyTorch CPU index publishes the matching 2.6.0 aarch64 wheel.
+        - python3 -m pip install --break-system-packages --no-cache-dir "torch==2.6.0" --index-url https://download.pytorch.org/whl/cpu
+        - python3 -m pip install --break-system-packages --no-cache-dir "numpy==2.1.3" "scipy==1.15.1" "nibabel==5.3.2" "numba==0.61.0" "pytorch-ignite==0.5.2" "tqdm==4.67.1" "pillow==11.0.0"
+        - mkdir -p /opt/cortech
+        - tar -xzf {{ get_file("cortech_source") }} --strip-components=1 -C /opt/cortech
+        # Cortech's released Linux wheel is x86_64, but its upstream source
+        # build is documented. Its Conan profile is also released with an
+        # x86_64 default, so select Conan's native ARM64 setting here.
+        - sed -i 's/^arch = x86_64$/arch = armv8/' /opt/cortech/conan_profiles/linux
+        - python3 -m pip install --break-system-packages --no-cache-dir "conan==2.32.0" "meson==1.12.0" "meson-python==0.21.1" "cython==3.3.0"
+        - cd /opt/cortech && conan config install -tf profiles conan_profiles
+        - cd /opt/cortech && conan install --profile:all linux --build=missing --output-folder=conan_deps .
+        - python3 -m pip install --break-system-packages --no-cache-dir --config-settings=setup-args=--native-file=/opt/cortech/conan_deps/conan_meson_native.ini --no-build-isolation --no-deps -e /opt/cortech
+        - python3 -m pip install --break-system-packages --no-cache-dir --no-deps {{ get_file("brainsynth_wheel") }} {{ get_file("brainnet_wheel") }}
+        - python3 -c "import brainnet, brainsynth, cortech, torch; assert torch.version.cuda is None; print('BrainNet imports with ARM64 CPU torch', torch.__version__)"
         - python3 -c "from importlib.resources import files; assert files('brainnet').joinpath('resources/models/topofit/t1w_1mm_state.pt').is_file()"
 
     - run:
@@ -147,6 +170,8 @@ files:
     url: "{{ context.brainsynth_wheel_url }}"
   - name: cortech_wheel
     url: "{{ context.cortech_wheel_url }}"
+  - name: cortech_source
+    url: "{{ context.cortech_source_url }}"
   - name: topofit_core.py
     filename: topofit_core.py
   - name: topofit_geometry.py
