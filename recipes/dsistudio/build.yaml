@@ -1,5 +1,5 @@
 name: dsistudio
-version: 2024.06.12.post1
+version: 2026.7.25.post1
 
 copyright:
   - license: CC-BY-NC-SA-4.0
@@ -9,9 +9,16 @@ copyright:
     
 architectures:
   - x86_64
+  - aarch64
 
 variables:
-  upstream_version: 2024.6.12
+  upstream_version: 2026.7.25
+  dsi_studio_archive:
+    try:
+      - value: dsi_studio_ubuntu2204_zip
+        condition: arch == "x86_64"
+      - value: dsi_studio_ubuntu2204_arm64_zip
+        condition: arch == "aarch64"
 
 auto_update:
   method: sources
@@ -19,9 +26,9 @@ auto_update:
     - id: archive
       method: github_release_asset
       repo: frankyeh/DSI-Studio
-      asset: dsi_studio_ubuntu2204_cpu.zip
+      asset: dsi_studio_ubuntu2204.zip
       target:
-        file: dsi_studio_ubuntu2204_cpu_zip
+        file: dsi_studio_ubuntu2204_zip
         variables:
           upstream_version: version
 
@@ -44,10 +51,10 @@ build:
     - workdir: /opt
 
     - run:
-        - cp {{ get_file("dsi_studio_ubuntu2204_cpu_zip") }} dsi_studio_ubuntu2204_cpu.zip
-        - unzip dsi_studio_ubuntu2204_cpu.zip
+        - cp {{ get_file(context.dsi_studio_archive) }} dsi_studio.zip
+        - unzip dsi_studio.zip
         - chmod a+rwx dsi-studio -R
-        - rm dsi_studio_ubuntu2204_cpu.zip
+        - rm dsi_studio.zip
 
     - environment:
         PATH: $PATH:/opt/dsi-studio
@@ -87,6 +94,11 @@ gui_apps:
     exec: "dsi_studio"
 
 files:
-  - name: dsi_studio_ubuntu2204_cpu_zip
-    url: https://github.com/frankyeh/DSI-Studio/releases/download/2024.06.12/dsi_studio_ubuntu2204_cpu.zip
-    sha256: 3bb5281a375b21744cf0fdcd096b198cec7ce5c2815ab73973b0a2074b12c338
+  - name: dsi_studio_ubuntu2204_zip
+    condition: arch == "x86_64"
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204.zip
+    sha256: 2d04771f669b4dcd5961a989b4c12820f2035f9fcafa798fdee215a1ba0e2722
+  - name: dsi_studio_ubuntu2204_arm64_zip
+    condition: arch == "aarch64"
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.upstream_version }}/dsi_studio_ubuntu2204_arm64.zip
+    sha256: 40442cb31c6b9e50da76cac9c765b24c39215f3fb1853e405a3420385088177f

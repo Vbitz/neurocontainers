@@ -1,7 +1,7 @@
 # Runtime checks use the bundled GQI template; it contains QA and ISO, not tensor FA/AD/RD.
 name: dsistudio
-version: 2024.06.12.post1
-upstream_version: 2024.6.12
+version: 2026.7.25.post1
+upstream_version: 2026.7.25
 env:
   QT_QPA_PLATFORM: offscreen
 required_files:
@@ -14,13 +14,13 @@ test_data:
   t2: ds000001/sub-01/anat/sub-01_inplaneT2.nii.gz
   output_dir: test_output
   atlas_dir: /opt/dsi-studio/atlas/human
-  template_t1w: /opt/dsi-studio/atlas/human/human.T1W.nii.gz
-  template_qa: /opt/dsi-studio/atlas/human/human.QA.nii.gz
+  template_t1w: /opt/dsi-studio/atlas/human/human_T1w.nii.gz
+  template_qa: /opt/dsi-studio/atlas/human/human_QA.nii.gz
 setup:
   script: |
     set -eu
     mkdir -p test_output
-    cp /opt/dsi-studio/atlas/human/human.fz test_output/human.fz
+    cp /opt/dsi-studio/tract/human.fz test_output/human.fz
 tests:
   - name: DSI Studio binary exists
     description: Verify dsi_studio binary is in PATH
@@ -413,19 +413,19 @@ tests:
       - output_exists: ${output_dir}/human.fz.qa.nii.gz
   - name: Template tract file exists
     description: Verify template tractography file exists
-    command: ls /opt/dsi-studio/atlas/human/human.tt.gz
+    command: ls /opt/dsi-studio/tract/human.tt.gz
     expected_exit_code: 0
   - name: Template mask file exists
-    description: Verify template mask file exists
-    command: ls /opt/dsi-studio/atlas/human/human.mask.nii.gz
+    description: Verify the current release's template tissue volume is present
+    command: ls /opt/dsi-studio/atlas/human/human_tissue.nii.gz
     expected_exit_code: 0
   - name: Template white matter file exists
     description: Verify template white matter file exists
-    command: ls /opt/dsi-studio/atlas/human/human.WM.nii.gz
+    command: ls /opt/dsi-studio/atlas/human/human_wm.nii.gz
     expected_exit_code: 0
   - name: Template ROI file exists
     description: Verify template ROI file exists
-    command: ls /opt/dsi-studio/atlas/human/human.roi.nii.gz
+    command: ls /opt/dsi-studio/tract/human_roi.nii.gz
     expected_exit_code: 0
   - name: ana action - Brodmann region analysis
     description: Analyze specific Brodmann area
