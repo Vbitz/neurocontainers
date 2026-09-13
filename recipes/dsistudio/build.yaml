@@ -67,6 +67,9 @@ build:
         - unzip dsi_studio_ubuntu2204_cpu.zip
         - chmod a+rwx {{ context.dsi_studio_unpacked_dir }} -R
         - mv {{ context.dsi_studio_unpacked_dir }} dsi-studio
+        - ln -s human_T1w.nii.gz dsi-studio/atlas/human/human.T1W.nii.gz
+        - ln -s human_QA.nii.gz dsi-studio/atlas/human/human.QA.nii.gz
+        - ln -s ../../tract/human.fz dsi-studio/atlas/human/human.fz
         - rm dsi_studio_ubuntu2204_cpu.zip
 
     - environment:
