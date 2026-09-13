@@ -47,6 +47,7 @@ build:
         - libgl1-mesa-dev
         - libqt5pas-dev
         - pkg-config
+        - zlib1g-dev
 
     - condition: arch == "aarch64"
       workdir: /opt
@@ -65,6 +66,7 @@ build:
         - cd /opt/MRIcroGL
         - sed -i '/<TargetProcessor Value="ATHLON64"\/>/d; s/<TargetCPU Value="x86_64"\/>/<TargetCPU Value="aarch64"\/>/' MRIcroGL_NoPython.lpi
         - sed -i 's/Info\.TimeStamp/Info.Time/g' mainunit.pas
+        - sed -i '/^   {\$define USEZLIBSSE}$/s/^/\/\//' SynZip.pas
         - lazbuild --build-ide= --add-package lazopenglcontext MRIcroGL_NoPython.lpi
         - lazbuild -B --ws=qt5 MRIcroGL_NoPython.lpi
         - cp MRIcroGL MRIcroGL_QT
