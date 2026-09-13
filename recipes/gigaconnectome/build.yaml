@@ -65,7 +65,7 @@ auto_update:
 
 build:
   kind: neurodocker
-  base-image: "{{ 'bids/giga_connectome:' + context.version if arch == 'x86_64' else 'python:3.9-slim-bullseye' }}"
+  base-image: "{{ 'bids/giga_connectome:' + context.version if arch == 'x86_64' else 'python:3.9-slim-bookworm' }}"
   pkg-manager: apt
   directives:
     - condition: arch == "aarch64"
