@@ -59,13 +59,13 @@ build:
         - cp {{ get_file("miniforge_installer_arm64") }} /tmp/Miniforge3-Linux-aarch64.sh
         - bash /tmp/Miniforge3-Linux-aarch64.sh -b -p /opt/miniforge3
         - rm /tmp/Miniforge3-Linux-aarch64.sh
-        - /opt/miniforge3/bin/mamba install -y -c conda-forge cmake ninja numpy pip python=3.12 vtk itk
+        - /opt/miniforge3/bin/mamba install -y -c conda-forge cmake ninja numpy pip python=3.12
         - mkdir -p /tmp/vmtk-src /tmp/vmtk-build/CMake
         - tar -xzf {{ get_file("vmtk_source") }} --strip-components=1 -C /tmp/vmtk-src
         - cp {{ get_file("vtk_macro_kit_python_wrap") }} /tmp/vmtk-build/CMake/vtkMacroKitPythonWrap.cmake
         - cp {{ get_file("vtk_wrap_hierarchy") }} /tmp/vmtk-build/CMake/vtkWrapHierarchy.cmake
         - cp {{ get_file("vtk_wrap_python") }} /tmp/vmtk-build/CMake/vtkWrapPython.cmake
-        - 'vtk_dir=$(dirname "$(find /opt/miniforge3 -name VTKConfig.cmake -print -quit)") && itk_dir=$(dirname "$(find /opt/miniforge3 -name ITKConfig.cmake -print -quit)") && /opt/miniforge3/bin/cmake -S /tmp/vmtk-src -B /tmp/vmtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/miniforge3 -DVMTK_USE_SUPERBUILD=OFF -DUSE_SYSTEM_VTK=ON -DUSE_SYSTEM_ITK=ON -DVTK_VMTK_WRAP_PYTHON=ON -DVMTK_USE_RENDERING=ON -DVMTK_SCRIPTS_ENABLED=ON -DBUILD_TESTING=OFF -DVMTK_BUILD_TESTING=OFF -DVTK_DIR="$vtk_dir" -DITK_DIR="$itk_dir" -DPython3_EXECUTABLE=/opt/miniforge3/bin/python'
+        - /opt/miniforge3/bin/cmake -S /tmp/vmtk-src -B /tmp/vmtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSUPERBUILD_INSTALL_PREFIX=/opt/miniforge3 -DVMTK_USE_SUPERBUILD=ON -DVMTK_USE_ITK5=ON -DVMTK_USE_VTK9=ON -DVTK_VMTK_WRAP_PYTHON=ON -DVMTK_USE_RENDERING=ON -DVMTK_SCRIPTS_ENABLED=ON -DBUILD_TESTING=OFF -DVMTK_BUILD_TESTING=OFF -DPython3_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_INCLUDE_DIR=/opt/miniforge3/include/python3.12 -DPYTHON_LIBRARY=/opt/miniforge3/lib/libpython3.12.so
         - /opt/miniforge3/bin/cmake --build /tmp/vmtk-build --parallel 2
         - /opt/miniforge3/bin/cmake --install /tmp/vmtk-build
         - /opt/miniforge3/bin/conda clean -afy
