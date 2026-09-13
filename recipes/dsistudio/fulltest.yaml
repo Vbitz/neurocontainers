@@ -3,7 +3,7 @@ name: dsistudio
 version: 2026.7.25.post1
 upstream_version: 2026.7.25
 env:
-  QT_QPA_PLATFORM: offscreen
+  QT_QPA_PLATFORM: xcb
 required_files:
   - dataset: ds000001
     files:
@@ -29,14 +29,14 @@ tests:
   - name: DSI Studio version check
     description: Check DSI Studio version output
     command: dsi_studio --version
-    expected_output_contains: 'DSI Studio version:'
+    expected_output_contains: 'DSI Studio ('
   - name: DSI Studio atlas directory exists
     description: Verify atlas directory is present
     command: ls -la /opt/dsi-studio/atlas/
     expected_output_contains: human
   - name: DSI Studio human template files exist
     description: Verify the bundled human FIB template is available.
-    command: ls /opt/dsi-studio/atlas/human/*.fz
+    command: ls /opt/dsi-studio/tract/human.fz
     expected_output_contains: human.fz
   - name: src action rejects missing input
     description: Verify the action fails for missing or invalid input.
@@ -277,11 +277,11 @@ tests:
     expected_exit_code: 0
   - name: Neonate atlas exists
     description: Verify dHCP neonate atlas is available
-    command: ls /opt/dsi-studio/atlas/human_neonate/
+    command: ls /opt/dsi-studio/atlas/human-neonate/
     expected_exit_code: 0
-  - name: Network files exist
-    description: Verify network definition files are available
-    command: ls /opt/dsi-studio/network/
+  - name: AI resources exist
+    description: Verify the current release's bundled AI documentation is available
+    command: ls /opt/dsi-studio/ai/
     expected_exit_code: 0
   - name: Color map files exist
     description: Verify color map files are available
