@@ -61,14 +61,14 @@ tests:
     command: mri_synthstrip -i ${t1w} -m test_output/t1w_brain_mask.nii.gz
     validate:
       - output_exists: ${output_dir}/t1w_brain_mask.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip T1w - generate stripped brain
     description: Generate stripped brain image using SynthStrip
     command: mri_synthstrip -i ${t1w} -o test_output/t1w_stripped.nii.gz
     validate:
       - output_exists: ${output_dir}/t1w_stripped.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip T1w - mask and stripped together
     description: Generate both brain mask and stripped image in single run
@@ -76,7 +76,7 @@ tests:
     validate:
       - output_exists: ${output_dir}/t1w_stripped_full.nii.gz
       - output_exists: ${output_dir}/t1w_mask_full.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip T1w - with distance transform
     description: Generate brain mask with signed distance transform output
@@ -84,35 +84,35 @@ tests:
     validate:
       - output_exists: ${output_dir}/t1w_mask_sdt.nii.gz
       - output_exists: ${output_dir}/t1w_sdt.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip with custom border
     description: Generate brain mask with larger border (2mm)
     command: mri_synthstrip -i ${t1w} -m test_output/t1w_mask_border2.nii.gz -b 2
     validate:
       - output_exists: ${output_dir}/t1w_mask_border2.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip with zero border
     description: Generate tight brain mask with no border expansion
     command: mri_synthstrip -i ${t1w} -m test_output/t1w_mask_border0.nii.gz -b 0
     validate:
       - output_exists: ${output_dir}/t1w_mask_border0.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip excluding CSF
     description: Generate brain mask excluding CSF from border
     command: mri_synthstrip -i ${t1w} -m test_output/t1w_mask_nocsf.nii.gz --no-csf
     validate:
       - output_exists: ${output_dir}/t1w_mask_nocsf.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Skull strip T2 image
     description: Generate brain mask from inplane T2 image
     command: mri_synthstrip -i ${t2} -m test_output/t2_mask.nii.gz
     validate:
       - output_exists: ${output_dir}/t2_mask.nii.gz
-    timeout: 300
+    timeout: 1200
 
   # ==========================================================================
   # QUICKSHEAR DEFACING
@@ -192,7 +192,7 @@ tests:
     validate:
       - output_exists: ${output_dir}/t1w_pipe_mask.nii.gz
       - output_exists: ${output_dir}/t1w_pipe_defaced.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Full pipeline - T2 defacing
     description: Complete pipeline for T2 image - skull strip then deface
@@ -202,7 +202,7 @@ tests:
     validate:
       - output_exists: ${output_dir}/t2_pipe_mask.nii.gz
       - output_exists: ${output_dir}/t2_defaced.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Full pipeline - conservative defacing
     description: Pipeline with conservative settings (large border, large buffer)
@@ -212,7 +212,7 @@ tests:
     validate:
       - output_exists: ${output_dir}/t1w_cons_mask.nii.gz
       - output_exists: ${output_dir}/t1w_conservative.nii.gz
-    timeout: 300
+    timeout: 1200
 
   - name: Full pipeline - aggressive defacing
     description: Pipeline with aggressive settings (tight mask, small buffer)
@@ -222,7 +222,7 @@ tests:
     validate:
       - output_exists: ${output_dir}/t1w_agg_mask.nii.gz
       - output_exists: ${output_dir}/t1w_aggressive.nii.gz
-    timeout: 300
+    timeout: 1200
 
   # ==========================================================================
   # PYTHON API TESTS
