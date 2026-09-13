@@ -32,7 +32,14 @@ build:
       - build-essential
       - cmake
       - git
-      - libinsighttoolkit5-dev
+      - libdouble-conversion-dev
+      - libexpat1-dev
+      - libfftw3-dev
+      - libhdf5-dev
+      - libjpeg-dev
+      - libpng-dev
+      - libtiff-dev
+      - zlib1g-dev
     - environment:
         C3DPATH: /opt/convert3d-nightly
         PATH: /opt/convert3d-nightly/bin:$PATH
@@ -43,12 +50,16 @@ build:
       - tar -xzf {{ get_file("archive") }} -C /opt/convert3d-nightly --strip-components 1
     - condition: arch == "aarch64"
       run:
+      - tar -xzf {{ get_file("itk_source_tar_gz") }} -C /tmp --strip-components 1
+      - cmake -S /tmp -B /tmp/itk-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/itk -DBUILD_TESTING=OFF -DITK_BUILD_DEFAULT_MODULES=ON -DBUILD_SHARED_LIBS=ON -DITK_WRAP_PYTHON=OFF
+      - cmake --build /tmp/itk-build --parallel 2
+      - cmake --install /tmp/itk-build
       - git clone --depth 1 https://github.com/pyushkevich/c3d.git /tmp/c3d-src
       - git -C /tmp/c3d-src checkout {{ context.c3d_source_commit }}
-      - cmake -S /tmp/c3d-src -B /tmp/c3d-build -DCONVERT3D_USE_ITK_REMOTE_MODULES=OFF -DBUILD_GUI=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/convert3d-nightly
-      - cmake --build /tmp/c3d-build --parallel
+      - cmake -S /tmp/c3d-src -B /tmp/c3d-build -DCONVERT3D_USE_ITK_REMOTE_MODULES=OFF -DBUILD_GUI=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/itk -DITK_DIR=/opt/itk/lib/cmake/ITK-5.3 -DCMAKE_INSTALL_PREFIX=/opt/convert3d-nightly
+      - cmake --build /tmp/c3d-build --parallel 2
       - cmake --install /tmp/c3d-build
-      - rm -rf /tmp/c3d-src /tmp/c3d-build
+      - rm -rf /tmp/ITK-5.3.0 /tmp/itk-build /tmp/c3d-src /tmp/c3d-build
 deploy:
   bins:
     - c3d 
@@ -63,3 +74,7 @@ files:
 - name: archive
   url: https://sourceforge.net/projects/c3d/files/c3d/Nightly/c3d-nightly-Linux-x86_64.tar.gz/download
   sha256: b5a59156cfc25100a2a0f9af65d6f0aba48d8f919658deb836fb6480511c074e
+- name: itk_source_tar_gz
+  condition: arch == "aarch64"
+  url: https://github.com/InsightSoftwareConsortium/ITK/archive/refs/tags/v5.3.0.tar.gz
+  sha256: 64e7e8094a5023c8f68ee042459d6319581fadb35e2fe90a4ae230ce36369db1
