@@ -178,6 +178,10 @@ build:
         - mesa-utils
         - libgl1-mesa-glx
         - spyder
+    - condition: arch == "aarch64"
+      install:
+        - qtbase5-dev
+        - qttools5-dev-tools
     - copy: sovabids.yml /opt/sovabids.yml
     - template:
         name: miniconda
@@ -200,6 +204,7 @@ build:
           flask=={{ context.flask_version }}
           uvicorn=={{ context.uvicorn_version }}
           httpx=={{ context.httpx_version }}
+          {{ 'PyQt5==5.15.11 --config-settings=qmake=/usr/lib/qt5/bin/qmake' if arch == 'aarch64' else '' }}
           git+https://github.com/yjmantilla/bidscoin.git@{{ context.bidscoin_commit }}
           git+https://github.com/yjmantilla/sovabids.git@{{ context.sovabids_tag }}
     - run:
