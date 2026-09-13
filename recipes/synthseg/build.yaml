@@ -12,6 +12,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   # mri_synthseg and the small label/name .npy files live in the FreeSurfer
@@ -102,7 +103,7 @@ build:
   # CUDA 11.8 + cuDNN 8 match the TensorFlow 2.13 build installed below, so
   # inference uses the scanner GPU when one is available and transparently
   # falls back to CPU when it is not.
-  base-image: nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+  base-image: "{{ 'nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04' if arch == 'x86_64' else 'ubuntu:22.04' }}"
   pkg-manager: apt
 
   directives:
