@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 structured_readme:
   description: This toolbox was used to explore the network correspondence between networks across different atlases.
@@ -58,6 +59,18 @@ readme: |-
 variables:
   upstream_version: 0.3.3
   data_commit: 0675b0df7fedc98d95c06c90da58b754a3cbfd49
+  miniconda_platform:
+    try:
+      - value: x86_64
+        condition: arch=="x86_64"
+      - value: aarch64
+        condition: arch=="aarch64"
+  miniconda_sha256:
+    try:
+      - value: aa8cbd6aa7ef85d0528616d2dffce8bd0b51924e7ddd18734ede6c1c63c462d0
+        condition: arch=="x86_64"
+      - value: 6886af5e5db79dfb4429cde937b6f806d02b0e98dd11249c74917661fc7b1f4b
+        condition: arch=="aarch64"
 
 auto_update:
   method: sources
@@ -180,8 +193,8 @@ files:
     url: https://raw.githubusercontent.com/rubykong/cbig_network_correspondence/refs/heads/master/NCT_env.yml
     sha256: fa5d943cd48ea097445c94bea89e133f7f0114032ad1d20e3911802fbd372230
   - name: miniconda.sh
-    url: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.5.1-0-Linux-x86_64.sh
-    sha256: aa8cbd6aa7ef85d0528616d2dffce8bd0b51924e7ddd18734ede6c1c63c462d0
+    url: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.5.1-0-Linux-{{ context.miniconda_platform }}.sh
+    sha256: "{{ context.miniconda_sha256 }}"
 
 categories:
   - image registration
