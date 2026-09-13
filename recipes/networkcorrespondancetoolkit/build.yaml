@@ -133,7 +133,7 @@ build:
         - cp {{ get_file("environment.yml") }} /tmp/NCT_env.yml
         # Keep upstream package versions on ARM64, while selecting ARM64
         # builds instead of the x86 build hashes in the upstream lock.
-        - if [ "$(uname -m)" = "aarch64" ]; then sed -i -e '/^  - ld_impl_linux-64=/d' -e '/^  - [^=]*=[^=]*=/ s/=[^=[:space:]]*$//' /tmp/NCT_env.yml; fi
+        - if [ "$(uname -m)" = "aarch64" ]; then awk '/^  - ld_impl_linux-64=/ { next } /^  - [^=]*=[^=]*=/ { sub(/=[^=[:space:]]*$/, "") } /^  - pip:$/ { print "  - vtk=9.3.0" } /^    - vtk==9.3.0$/ { next } { print }' /tmp/NCT_env.yml > /tmp/NCT_env.arm64.yml && mv /tmp/NCT_env.arm64.yml /tmp/NCT_env.yml; fi
         - PIP_DEFAULT_TIMEOUT=300 conda env create -f /tmp/NCT_env.yml
         - rm /tmp/NCT_env.yml
         - conda init bash
