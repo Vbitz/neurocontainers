@@ -14,6 +14,9 @@ architectures:
 variables:
   niftyreg_version: 1.4.0
   niftyreg_revision: 83d8d1182ed4c227ce4764f1fdab3b1797eecd8d
+  niftyreg_arm_version: 2.0.0
+  niftyreg_arm_revision: v2.0.0
+  niftyreg_arm_source_dir: niftyreg-2.0.0
   fsl_version: 5.0.11
   fsl_arm_version: 6.0.7.22
   dsi_version: 2026.7.25
@@ -102,8 +105,8 @@ build:
 
     - condition: arch == "aarch64"
       run:
-        - tar -xzf {{ get_file("niftyreg_tar") }} -C /opt/niftyreg-builder
-        - mv niftyreg-{{ context.niftyreg_revision }} src
+        - tar -xzf {{ get_file("niftyreg_arm_tar") }} -C /opt/niftyreg-builder
+        - mv {{ context.niftyreg_arm_source_dir }} src
         - mkdir build
         - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg -D USE_SSE=OFF
         - cd build
@@ -190,7 +193,11 @@ files:
     url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.dsi_version }}/dsi_studio_ubuntu2204_cpu_arm64.zip
     sha256: 49d1bfffda09380accad1c5e949f37203928e17bd4f37dcd0a1942b257ccc430
   - name: niftyreg_tar
+    condition: arch == "x86_64"
     url: https://github.com/KCL-BMEIS/niftyreg/archive/{{ context.niftyreg_revision }}.tar.gz
+  - name: niftyreg_arm_tar
+    condition: arch == "aarch64"
+    url: https://github.com/KCL-BMEIS/niftyreg/archive/refs/tags/{{ context.niftyreg_arm_revision }}.tar.gz
   - name: fsl_tar
     condition: arch == "x86_64"
     url: https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-{{ context.fsl_version }}-centos6_64.tar.gz
