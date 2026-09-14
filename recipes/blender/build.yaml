@@ -83,6 +83,7 @@ build:
       run:
         - tar -xzf {{ get_file("blender_source") }} --strip-components=1 -C /opt/blender-{{ context.version }}
         - python3 build_files/build_environment/install_linux_packages.py
+        - cp {{ get_file("gmp_source") }} /opt/build_linux/deps_arm64/packages/gmp-6.3.0.tar.xz
         - make deps
         - make
         - ln -sfn /opt/build_linux/bin/blender /usr/local/bin/blender
@@ -132,3 +133,7 @@ files:
     condition: arch == "aarch64"
     url: "https://github.com/blender/blender/archive/refs/tags/v{{ context.version }}.tar.gz"
     sha256: f506150541bf77178cb6bd7db9eb2c55ad1547353325cbde930717ba7cda68c8
+  - name: gmp_source
+    condition: arch == "aarch64"
+    url: "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
+    sha256: a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
