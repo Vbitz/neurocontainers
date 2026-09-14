@@ -83,6 +83,7 @@ build:
     - condition: arch == "aarch64"
       run:
         - tar -xzf {{ get_file("blender_source") }} --strip-components=1 -C /opt/blender-{{ context.version }}
+        - sed -i 's/-DOSL_USE_OPTIX=ON/-DOSL_USE_OPTIX=OFF/' /opt/blender-{{ context.version }}/build_files/build_environment/cmake/osl.cmake
         - python3 build_files/build_environment/install_linux_packages.py
         - mkdir -p /opt/build_linux/deps_arm64/packages
         - cp {{ get_file("gmp_source") }} /opt/build_linux/deps_arm64/packages/gmp-6.3.0.tar.xz
