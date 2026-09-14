@@ -75,7 +75,7 @@ tests:
   - name: ROMEO version check
     description: Verify ROMEO binary runs and reports version
     command: "bash -lc 'env JULIA_PROJECT=/opt/mritools-${version}/share/julia bash -lc '\"'\"'romeo --version'\"'\"''"
-    expected_output_contains: "3"
+    expected_output_contains: "1.6.0"
 
   - name: ROMEO help
     description: Display ROMEO help message
