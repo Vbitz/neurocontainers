@@ -185,6 +185,7 @@ build:
         install_path: /opt/miniconda
         env_name: sovabids
         yaml_file: /opt/sovabids.yml
+        conda_install: "{{ 'pyqt=5.15.7' if arch == 'aarch64' else '' }}"
         pip_install: |
           bids_validator=={{ context.bids_validator_version }}
           fastapi=={{ context.fastapi_version }}
