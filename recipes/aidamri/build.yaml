@@ -108,6 +108,11 @@ build:
       run:
         - tar -xzf {{ get_file("niftyreg_arm_tar") }} -C /opt/niftyreg-builder
         - mv {{ context.niftyreg_arm_source_dir }} src
+        - git -C src init
+        - git -C src config user.email neurocontainers@example.invalid
+        - git -C src config user.name NeuroContainers
+        - git -C src commit --allow-empty -m "Import NiftyReg {{ context.niftyreg_arm_version }}"
+        - git -C src tag {{ context.niftyreg_arm_revision }}
         - mkdir build
         - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg -D USE_SSE=OFF
         - cd build
