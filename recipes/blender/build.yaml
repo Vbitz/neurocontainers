@@ -63,6 +63,7 @@ build:
         - automake
         - bison
         - libasound2-dev
+        - libxt-dev
         - libtool
         - libpipewire-0.3-dev
         - libpulse-dev
