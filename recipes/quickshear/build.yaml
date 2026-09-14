@@ -154,7 +154,7 @@ files:
       filename: invertcontrast.py
     - name: mri_synthstrip_arm64
       condition: arch == "aarch64"
-      url: https://raw.githubusercontent.com/freesurfer/freesurfer/v7.4.1/mri_synthstrip/mri_synthstrip
+      url: https://raw.githubusercontent.com/freesurfer/freesurfer/v8.2.0/mri_synthstrip/mri_synthstrip
     - name: synthstrip_model_arm64
       condition: arch == "aarch64"
       url: https://surfer.nmr.mgh.harvard.edu/docs/synthstrip/requirements/synthstrip.1.pt
