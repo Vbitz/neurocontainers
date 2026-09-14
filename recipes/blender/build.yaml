@@ -74,6 +74,7 @@ build:
         - pkg-config
         - sudo
         - tcl
+        - texinfo
         - yasm
 
     - condition: arch == "aarch64"
