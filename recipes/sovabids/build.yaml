@@ -178,9 +178,6 @@ build:
         - mesa-utils
         - libgl1-mesa-glx
         - spyder
-    - condition: arch == "aarch64"
-      environment:
-        PYTHONPATH: /usr/lib/python3/dist-packages
     - copy: sovabids.yml /opt/sovabids.yml
     - template:
         name: miniconda
@@ -203,8 +200,20 @@ build:
           flask=={{ context.flask_version }}
           uvicorn=={{ context.uvicorn_version }}
           httpx=={{ context.httpx_version }}
-          git+https://github.com/yjmantilla/bidscoin.git@{{ context.bidscoin_commit }}
+          {{ 'git+https://github.com/yjmantilla/bidscoin.git@' + context.bidscoin_commit if arch == 'x86_64' else '' }}
           git+https://github.com/yjmantilla/sovabids.git@{{ context.sovabids_tag }}
+    - condition: arch == "aarch64"
+      run:
+        - >-
+          site_packages=$(/opt/miniconda/envs/sovabids/bin/python -c
+          'import site; print(site.getsitepackages()[0])'); printf '%s\n'
+          /usr/lib/python3/dist-packages > "$site_packages/ubuntu-system-packages.pth"
+        - >-
+          /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
+          matplotlib ruamel.yaml coloredlogs multiecho nibabel pydeface drmaa
+        - >-
+          /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
+          --no-deps git+https://github.com/yjmantilla/bidscoin.git@{{ context.bidscoin_commit }}
     - run:
         - /opt/miniconda/envs/sovabids/bin/python -m pip check
         - cp {{ get_file(context.vscode_installer) }} vscode.deb
