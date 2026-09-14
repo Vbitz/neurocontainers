@@ -12,6 +12,7 @@ copyright:
     url: https://github.com/ME-ICA/me-ica/blob/{{ context.upstream_version }}/LICENSE
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -71,6 +72,26 @@ build:
         - tar
         - tcsh
 
+    - condition: arch == "aarch64"
+      install:
+        - libfontconfig1
+        - libfreetype6
+        - libgl1
+        - libglu1-mesa
+        - libglw1-mesa
+        - libgomp1
+        - libice6
+        - libsm6
+        - libx11-6
+        - libxext6
+        - libxfixes3
+        - libxft2
+        - libxi6
+        - libxmu6
+        - libxpm4
+        - libxrender1
+        - libxt6
+
     - variables:
         openrecon_ubuntu_version: "24.04"
 
@@ -78,7 +99,8 @@ build:
 
     - workdir: /opt/meica
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - mkdir -p /opt/meica/me-ica
         - tar -xzf {{ get_file("meica_source") }} -C /opt/meica/me-ica --strip-components=1
         - patch -d /opt/meica/me-ica -p1 < {{ get_file("meica_skullstrip_patch") }}
@@ -88,6 +110,33 @@ build:
         - /opt/meica/venv/bin/pip install --no-cache-dir -r /opt/meica/me-ica/requirements.txt
         - chmod +x /opt/meica/me-ica/meica.py /opt/meica/me-ica/meica-afni-runtime/activate_meica_afni
         - test -x /opt/meica/me-ica/meica-afni-runtime/bin/3dinfo
+        - test -x /opt/meica/me-ica/meica-afni-runtime/utils/dcm2niix
+
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /opt/meica/me-ica
+        - tar -xzf {{ get_file("meica_source") }} -C /opt/meica/me-ica --strip-components=1
+        - patch -d /opt/meica/me-ica -p1 < {{ get_file("meica_skullstrip_patch") }}
+        - mkdir -p /opt/meica/me-ica/meica-afni-runtime/bin /opt/meica/me-ica/meica-afni-runtime/utils /opt/meica/me-ica/meica-afni-runtime/lib/dri
+        - tar -xzf {{ get_file("meica_afni_runtime_arm64") }} -C /tmp
+        - cp -a /tmp/linux_ubuntu_24_ARM/. /opt/meica/me-ica/meica-afni-runtime/bin/
+        - printf '%s\n' '#!/usr/bin/env bash' 'HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' 'export PATH="$HERE/bin:$PATH"' 'export AFNI_PLUGINPATH="$HERE/bin"' 'export AFNI_ATLAS_PATH="$HERE/bin:${AFNI_ATLAS_PATH:-}"' 'export AFNI_NOMOTD=YES' 'export LIBGL_ALWAYS_SOFTWARE=1' 'export LD_LIBRARY_PATH="$HERE/bin:$HERE/lib:${LD_LIBRARY_PATH:-}"' > /opt/meica/me-ica/meica-afni-runtime/activate_meica_afni
+        - chmod +x /opt/meica/me-ica/meica-afni-runtime/activate_meica_afni
+        - mkdir -p /tmp/dcm2niix-src /tmp/dcm2niix-build /tmp/dcm2niix-install
+        - tar -xzf {{ get_file("dcm2niix_source") }} -C /tmp/dcm2niix-src --strip-components=1
+        - cmake -S /tmp/dcm2niix-src -B /tmp/dcm2niix-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/dcm2niix-install
+        - cmake --build /tmp/dcm2niix-build --parallel
+        - cmake --install /tmp/dcm2niix-build
+        - cp /tmp/dcm2niix-install/bin/dcm2niix /opt/meica/me-ica/meica-afni-runtime/utils/dcm2niix
+        - chmod +x /opt/meica/me-ica/meica-afni-runtime/utils/dcm2niix
+        - python3 -m venv /opt/meica/venv
+        - /opt/meica/venv/bin/pip install --no-cache-dir --upgrade pip
+        - /opt/meica/venv/bin/pip install --no-cache-dir -r /opt/meica/me-ica/requirements.txt
+        - chmod +x /opt/meica/me-ica/meica.py
+        - test -x /opt/meica/me-ica/meica-afni-runtime/bin/3dinfo
+        - test -x /opt/meica/me-ica/meica-afni-runtime/bin/3dSkullStrip
+        - test -x /opt/meica/me-ica/meica-afni-runtime/bin/3dmask_tool
+        - test -x /opt/meica/me-ica/meica-afni-runtime/bin/3dBrickStat
         - test -x /opt/meica/me-ica/meica-afni-runtime/utils/dcm2niix
 
     - environment:
@@ -186,7 +235,14 @@ files:
   - name: meica_source
     url: https://github.com/ME-ICA/me-ica/archive/refs/tags/{{ context.upstream_version }}.tar.gz
   - name: meica_afni_runtime
+    condition: arch == "x86_64"
     url: https://github.com/ME-ICA/meica-afni/releases/download/{{ context.upstream_version }}/meica-afni-runtime-linux-x86_64.tar.gz
+  - name: meica_afni_runtime_arm64
+    condition: arch == "aarch64"
+    url: https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_24_ARM.tgz
+  - name: dcm2niix_source
+    condition: arch == "aarch64"
+    url: https://github.com/rordenlab/dcm2niix/archive/refs/tags/v1.0.20250505.tar.gz
   - name: meica_launcher
     filename: meica-launcher
   - name: meica_skullstrip_fallback
