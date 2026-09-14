@@ -56,6 +56,7 @@ build:
         method: source
         version: 3.0.4
         libtiff_package: libtiff5
+        configure_options: ""
     - condition: arch == "x86_64"
       template:
         name: miniconda
@@ -79,6 +80,13 @@ build:
         - libxt6
         - libgl1-mesa-glx
         - xvfb
+    - condition: arch == "aarch64"
+      install:
+        - qtbase5-dev
+        - libqt5opengl5-dev
+        - libqt5svg5-dev
+        - libgl1-mesa-dev
+        - libglu1-mesa-dev
     - run:
         - pip install packaging numpy
     - run:
