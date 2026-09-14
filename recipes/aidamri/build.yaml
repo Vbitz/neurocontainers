@@ -82,6 +82,7 @@ build:
       run:
         - mkdir -p /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
         - unzip -q {{ get_file("dsi_studio_arm_zip") }} -d /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - mv /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio-cpu /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio
         - chmod -R a+rX /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
         - chmod a+rx /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio
         - echo /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio > /opt/aidamri-{{ context.version }}/bin/3.2_DTIConnectivity/dsi_studioPath.txt
