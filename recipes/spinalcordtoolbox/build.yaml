@@ -89,6 +89,12 @@ build:
         - sed -i 's/Miniforge3-Linux-x86_64.sh/Miniforge3-Linux-aarch64.sh/' install_sct
         - sed -i 's/ xorg-libxinerama$/ xorg-libxinerama pyqt=5.15.11/' install_sct
         - sed -i -e '/^PyQt5==/d' -e '/^PyQt5-Qt5==/d' -e '/^PyQt5_sip==/d' requirements-freeze.txt
+        # SCT's Linux dependency check identifies a GPU install by the
+        # absence of the +cpu version marker.  The older ARM64 wheel selected
+        # by torch<2.3 is CPU-only but lacks that marker.  Use the released
+        # ARM64 CPU wheels that report the marker and keep the matching
+        # torchvision pair together.
+        - sed -i -e 's/^torch<2.3 .*/torch==2.10.0+cpu/' -e '/^torch==2.10.0+cpu$/a torchvision==0.25.0+cpu' requirements-freeze.txt
     - run:
         - chmod a+rwx /opt/spinalcordtoolbox-{{ context.install_version }}/ -R
     - user: spinalcordtoolbox
