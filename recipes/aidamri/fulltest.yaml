@@ -37,6 +37,16 @@ tests:
       bash -lc 'reg_aladin --help 2>&1 | head -5 && reg_resample --help 2>&1 | head -5'
     expected_output_contains: "reg_resample"
 
+  - name: DSI Studio ARM or x86 binary available
+    description: Verify the architecture-matched DSI Studio dependency is installed
+    command: test -x /opt/aidamri-${version}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio
+    expected_exit_code: 0
+
+  - name: DSI Studio version command
+    description: Verify the bundled DSI Studio binary starts and reports its version
+    command: /opt/aidamri-${version}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio --version
+    expected_output_contains: "DSI Studio version:"
+
   - name: FSL tools available
     description: Verify the bundled FSL tools are on PATH
     command: bash -lc 'bet 2>&1 | head -20 && fslmaths 2>&1 | head -5'

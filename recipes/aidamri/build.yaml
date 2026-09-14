@@ -9,11 +9,14 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 variables:
   niftyreg_version: 1.4.0
   niftyreg_revision: 83d8d1182ed4c227ce4764f1fdab3b1797eecd8d
   fsl_version: 5.0.11
+  fsl_arm_version: 6.0.7.22
+  dsi_version: 2026.7.25
 
 auto_update:
   method: github_release
@@ -21,7 +24,7 @@ auto_update:
 
 build:
   kind: neurodocker
-  base-image: ubuntu:20.04
+  base-image: ubuntu:22.04
   pkg-manager: apt
   directives:
     - install:
@@ -29,6 +32,7 @@ build:
         - cmake
         - make
         - g++
+        - unzip
         - libgomp1
         - bc
         - dc
@@ -40,6 +44,7 @@ build:
         - libglu1-mesa-dev
         - libice6
         - libopenblas0
+        - libqt6charts6-dev
         - libxcursor1
         - libxft2
         - libxinerama1
@@ -51,6 +56,12 @@ build:
         - sudo
         - wget
 
+    - condition: arch == "aarch64"
+      template:
+        name: fsl
+        version: "{{ context.fsl_arm_version }}"
+        install_path: /opt/fsl-{{ context.fsl_version }}
+
     - workdir: /opt
 
     - run:
@@ -58,7 +69,22 @@ build:
         - mv AIDAmri-{{ context.version }} aidamri-{{ context.version }}
         - find /opt/aidamri-{{ context.version }} -name '.DS_Store' -delete
         - find /opt/aidamri-{{ context.version }} -name '.~lock.*' -delete
-        - echo /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu_1804/dsi-studio/dsi_studio > /opt/aidamri-{{ context.version }}/bin/3.2_DTIConnectivity/dsi_studioPath.txt
+
+    - condition: arch == "x86_64"
+      run:
+        - mkdir -p /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - unzip -q {{ get_file("dsi_studio_x86_zip") }} -d /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - chmod -R a+rX /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - chmod a+rx /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio
+        - echo /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio > /opt/aidamri-{{ context.version }}/bin/3.2_DTIConnectivity/dsi_studioPath.txt
+
+    - condition: arch == "aarch64"
+      run:
+        - mkdir -p /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - unzip -q {{ get_file("dsi_studio_arm_zip") }} -d /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - chmod -R a+rX /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204
+        - chmod a+rx /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio
+        - echo /opt/aidamri-{{ context.version }}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio > /opt/aidamri-{{ context.version }}/bin/3.2_DTIConnectivity/dsi_studioPath.txt
 
     - workdir: /opt/niftyreg-builder
 
@@ -72,17 +98,30 @@ build:
         - make install
         - rm -rf /opt/niftyreg-builder
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - mkdir -p /opt/fsl-{{ context.fsl_version }}
         - tar -xzf {{ get_file("fsl_tar") }} -C /opt/fsl-{{ context.fsl_version }} --strip-components 1 --exclude='data'
         - bash /opt/fsl-{{ context.fsl_version }}/etc/fslconf/fslpython_install.sh -f /opt/fsl-{{ context.fsl_version }}
         - rm -f /opt/fsl-{{ context.fsl_version }}/bin/fslpython
 
-    - template:
+    - condition: arch == "x86_64"
+      template:
         name: miniconda
         version: 4.7.12.1
+        arch: x86_64
+        install_path: /opt/miniconda-4.7.12.1
         conda_install: python=3.6
         pip_install: nipype==1.1.2 lmfit==0.9.11 progressbar2==3.38.0 nibabel
+
+    - condition: arch == "aarch64"
+      template:
+        name: miniconda
+        version: py39_24.7.1-0
+        arch: aarch64
+        install_path: /opt/miniconda-4.7.12.1
+        conda_install: python=3.10
+        pip_install: nipype==1.7.0 lmfit==1.0.3 progressbar33==2.4 nibabel
 
     - environment:
         FSLDIR: /opt/fsl-{{ context.fsl_version }}
@@ -129,7 +168,16 @@ readme: |
 files:
   - name: aidamri_tar
     url: https://github.com/Aswendt-Lab/AIDAmri/archive/v{{ context.version }}.tar.gz
+  - name: dsi_studio_x86_zip
+    condition: arch == "x86_64"
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.dsi_version }}/dsi_studio_ubuntu2204_cpu.zip
+    sha256: 53e8e8aa34f1d547f5ee2cb879840dcc3f7ee7457cabe033ce7389eee589c783
+  - name: dsi_studio_arm_zip
+    condition: arch == "aarch64"
+    url: https://github.com/frankyeh/DSI-Studio/releases/download/{{ context.dsi_version }}/dsi_studio_ubuntu2204_cpu_arm64.zip
+    sha256: 49d1bfffda09380accad1c5e949f37203928e17bd4f37dcd0a1942b257ccc430
   - name: niftyreg_tar
     url: https://github.com/KCL-BMEIS/niftyreg/archive/{{ context.niftyreg_revision }}.tar.gz
   - name: fsl_tar
+    condition: arch == "x86_64"
     url: https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-{{ context.fsl_version }}-centos6_64.tar.gz
