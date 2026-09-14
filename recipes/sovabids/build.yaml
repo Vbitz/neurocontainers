@@ -214,6 +214,7 @@ build:
         - >-
           /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
           matplotlib ruamel.yaml coloredlogs multiecho nibabel pydeface drmaa debugpy
+          numpy=={{ context.numpy_version }} pandas=={{ context.pandas_version }}
         - >-
           /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
           --no-deps git+https://github.com/yjmantilla/bidscoin.git@{{ context.bidscoin_commit }}
