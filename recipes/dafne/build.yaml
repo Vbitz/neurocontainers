@@ -170,7 +170,7 @@ build:
         - python {{ get_file("patch_dafne_dl_annotations.py") }}
         - dafne_bin="$(command -v dafne)"
         - mv "$dafne_bin" "${dafne_bin}.real"
-        - printf '%s\n' '#!/usr/bin/env bash' 'export HOME=/tmp' 'export XDG_CACHE_HOME=/tmp/.cache' 'export XDG_CONFIG_HOME=/tmp/.config' 'export XDG_DATA_HOME=/tmp/.local/share' 'export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python' 'mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"' 'exec "$0.real" "$@"' > "$dafne_bin"
+        - printf '%s\n' '#!/usr/bin/env bash' 'export HOME=/tmp' 'export XDG_CACHE_HOME=/tmp/.cache' 'export XDG_CONFIG_HOME=/tmp/.config' 'export XDG_DATA_HOME=/tmp/.local/share' 'export XDG_RUNTIME_DIR=/tmp/.xdg-runtime' 'export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python' 'mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"' 'chmod 700 "$XDG_RUNTIME_DIR"' 'exec "$0.real" "$@"' > "$dafne_bin"
         - chmod +x "$dafne_bin"
 
 deploy:
