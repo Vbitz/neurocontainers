@@ -87,6 +87,8 @@ build:
     - condition: arch == "aarch64"
       run:
         - sed -i 's/Miniforge3-Linux-x86_64.sh/Miniforge3-Linux-aarch64.sh/' install_sct
+        - sed -i 's/ xorg-libxinerama$/ xorg-libxinerama pyqt=5.15.11/' install_sct
+        - sed -i -e '/^PyQt5==/d' -e '/^PyQt5-Qt5==/d' -e '/^PyQt5_sip==/d' requirements-freeze.txt
     - run:
         - chmod a+rwx /opt/spinalcordtoolbox-{{ context.install_version }}/ -R
     - user: spinalcordtoolbox
