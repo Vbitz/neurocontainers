@@ -12,6 +12,7 @@ architectures:
 variables:
   miniforge_version: 24.7.1-2
   python_version: "3.10"
+  vtk_version: 9.3.1
   vmtk_source_revision: 30d5d7cb8e607d153c208a9d7d39c9feb7985476
   vtk_addon_revision: cf1126568415179fb5b1c16121087bd2494e2e0e
 
@@ -59,13 +60,13 @@ build:
         - cp {{ get_file("miniforge_installer_arm64") }} /tmp/Miniforge3-Linux-aarch64.sh
         - bash /tmp/Miniforge3-Linux-aarch64.sh -b -p /opt/miniforge3
         - rm /tmp/Miniforge3-Linux-aarch64.sh
-        - /opt/miniforge3/bin/mamba install -y -c conda-forge itk vtk numpy pip python=3.12
+        - /opt/miniforge3/bin/mamba install -y -c conda-forge vtk={{ context.vtk_version }} numpy pip python=3.12
         - mkdir -p /tmp/vmtk-src /tmp/vmtk-build/CMake
         - tar -xzf {{ get_file("vmtk_source") }} --strip-components=1 -C /tmp/vmtk-src
         - cp {{ get_file("vtk_macro_kit_python_wrap") }} /tmp/vmtk-build/CMake/vtkMacroKitPythonWrap.cmake
         - cp {{ get_file("vtk_wrap_hierarchy") }} /tmp/vmtk-build/CMake/vtkWrapHierarchy.cmake
         - cp {{ get_file("vtk_wrap_python") }} /tmp/vmtk-build/CMake/vtkWrapPython.cmake
-        - /usr/bin/cmake -S /tmp/vmtk-src -B /tmp/vmtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/miniforge3 -DVMTK_USE_SUPERBUILD=OFF -DUSE_SYSTEM_ITK=ON -DUSE_SYSTEM_VTK=ON -DVTK_VMTK_WRAP_PYTHON=ON -DVMTK_USE_RENDERING=ON -DVMTK_SCRIPTS_ENABLED=ON -DBUILD_TESTING=OFF -DVMTK_BUILD_TESTING=OFF -DVMTK_TEST_DATA_SOURCE=in-place -DPython3_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_VERSION_MAJOR=3 -DPYTHON_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_INCLUDE_DIR=/opt/miniforge3/include/python3.12 -DPYTHON_LIBRARY=/opt/miniforge3/lib/libpython3.12.so -DITK_DIR=/opt/miniforge3/lib/cmake/ITK-5.4 -DVTK_DIR=/opt/miniforge3/lib/cmake/vtk-9.6
+        - /usr/bin/cmake -S /tmp/vmtk-src -B /tmp/vmtk-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSUPERBUILD_INSTALL_PREFIX=/opt/miniforge3 -DVMTK_USE_SUPERBUILD=ON -DUSE_SYSTEM_VTK=ON -DCMAKE_PREFIX_PATH=/opt/miniforge3 -DVTK_DIR=/opt/miniforge3/lib/cmake/vtk-9.3 -DVTK_VMTK_WRAP_PYTHON=ON -DVMTK_USE_RENDERING=ON -DVMTK_SCRIPTS_ENABLED=ON -DBUILD_TESTING=OFF -DVMTK_BUILD_TESTING=OFF -DVMTK_TEST_DATA_SOURCE=in-place -DPython3_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_VERSION_MAJOR=3 -DPYTHON_EXECUTABLE=/opt/miniforge3/bin/python -DPYTHON_INCLUDE_DIR=/opt/miniforge3/include/python3.12 -DPYTHON_LIBRARY=/opt/miniforge3/lib/libpython3.12.so
         - /usr/bin/cmake --build /tmp/vmtk-build --parallel 2
         - /usr/bin/cmake --install /tmp/vmtk-build
         - /opt/miniforge3/bin/conda clean -afy
