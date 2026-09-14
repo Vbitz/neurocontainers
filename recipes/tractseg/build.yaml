@@ -45,6 +45,13 @@ build:
   base-image: ubuntu:22.04
   pkg-manager: apt
   directives:
+    - condition: arch == "aarch64"
+      install:
+        - qtbase5-dev
+        - libqt5opengl5-dev
+        - libqt5svg5-dev
+        - libgl1-mesa-dev
+        - libglu1-mesa-dev
     - condition: arch == "x86_64"
       template:
         name: mrtrix3
@@ -80,13 +87,6 @@ build:
         - libxt6
         - libgl1-mesa-glx
         - xvfb
-    - condition: arch == "aarch64"
-      install:
-        - qtbase5-dev
-        - libqt5opengl5-dev
-        - libqt5svg5-dev
-        - libgl1-mesa-dev
-        - libglu1-mesa-dev
     - run:
         - pip install packaging numpy
     - run:
