@@ -7,6 +7,7 @@ copyright:
 
 architectures:
   - x86_64
+  - aarch64
 
 auto_update:
   method: sources
@@ -28,11 +29,12 @@ auto_update:
 build:
   kind: neurodocker
 
-  base-image: ubuntu:18.04
+  base-image: "{% if context.arch == 'aarch64' %}ubuntu:24.04{% else %}ubuntu:18.04{% endif %}"
   pkg-manager: apt
 
   directives:
-    - install:
+    - condition: arch == "x86_64"
+      install:
       - ca-certificates
       - curl
       - libgl1-mesa-dev
@@ -57,6 +59,48 @@ build:
       - gdebi-core
       - binutils
       - git
+    - condition: arch == "aarch64"
+      install:
+      - bc
+      - bison
+      - build-essential
+      - ca-certificates
+      - cmake
+      - curl
+      - ed
+      - flex
+      - freeglut3-dev
+      - git
+      - imagemagick
+      - libgl1-mesa-dev
+      - libglu1-mesa-dev
+      - libgomp1
+      - libice-dev
+      - libjpeg-dev
+      - libpng-dev
+      - libsm-dev
+      - libtiff-dev
+      - libx11-dev
+      - libxext-dev
+      - libxi-dev
+      - libxmu-dev
+      - libxpm-dev
+      - libxrender-dev
+      - libxft-dev
+      - octave
+      - perl
+      - unzip
+    - condition: arch == "aarch64"
+      workdir: /tmp
+    - condition: arch == "aarch64"
+      run:
+      - mkdir -p /tmp/minc-source /tmp/minc-build
+      - tar -xzf {{ get_file("minc_source") }} -C /tmp/minc-source --strip-components=1
+      - cmake -S /tmp/minc-source -B /tmp/minc-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/minc/{{ context.upstream_version }} -DMT_BUILD_ABC=ON -DMT_BUILD_ANTS=ON -DMT_BUILD_C3D=ON -DMT_BUILD_ELASTIX=ON -DMT_BUILD_ITK_TOOLS=ON -DMT_BUILD_SHARED_LIBS=ON -DMT_BUILD_VISUAL_TOOLS=ON -DMT_USE_OPENMP=ON -DUSE_SYSTEM_FFTW3D=OFF -DUSE_SYSTEM_FFTW3F=OFF -DUSE_SYSTEM_GLUT=OFF -DUSE_SYSTEM_GSL=OFF -DUSE_SYSTEM_HDF5=OFF -DUSE_SYSTEM_ITK=OFF -DUSE_SYSTEM_NETCDF=OFF -DUSE_SYSTEM_NIFTI=OFF -DUSE_SYSTEM_PCRE=OFF -DUSE_SYSTEM_ZLIB=OFF
+      - cmake --build /tmp/minc-build --parallel 4
+      - cmake --install /tmp/minc-build
+      - ln -s /opt/minc/{{ context.upstream_version }} /opt/minc-{{ context.upstream_version }}
+      - rm -rf /tmp/minc-source /tmp/minc-build
     - environment:
         MINC_TOOLKIT: /opt/minc-{{ context.upstream_version }}
         MINC_TOOLKIT_VERSION: /opt/minc-{{ context.upstream_version }}
@@ -69,7 +113,8 @@ build:
         MINC_COMPRESS: '4'
         VOLUME_CACHE_THRESHOLD: '-1'
         MANPATH: /opt/minc-{{ context.upstream_version }}/man:${MANPATH}
-    - run:
+    - condition: arch == "x86_64"
+      run:
       - cd / && ar p {{ get_file("archive") }} data.tar.gz | tar -xz
       - ln -s /opt/minc/{{ context.upstream_version }} /opt/minc-{{ context.upstream_version }}
       - mkdir -p /opt/minc-{{ context.upstream_version }}/volgenmodel-nipype
@@ -114,11 +159,18 @@ gui_apps:
     exec: "register"
 variables:
   upstream_version: 1.9.18
+  minc_source_version: 1.9.18.4
+  minc_source_sha256: d90ee2572dfc527ed2da195b54f6c3ab411ab985eab60f86f90a5c1e66f3297d
   volgenmodel_revision: 9e2d8d9cb9e42925a612c9c81bd081c095879aec
 files:
 - name: archive
+  condition: arch == "x86_64"
   url: https://packages.bic.mni.mcgill.ca/minc-toolkit/Debian/minc-toolkit-1.9.18-20200813-Ubuntu_18.04-x86_64.deb
   sha256: 43701593e9f366604b45b066849c4bb065e9cf5f41602af6e523366e50552947
+- name: minc_source
+  condition: arch == "aarch64"
+  url: https://github.com/BIC-MNI/minc-toolkit-v2/archive/refs/tags/release-{{ context.minc_source_version }}.tar.gz
+  sha256: "{{ context.minc_source_sha256 }}"
 - name: volgenmodel
   url: https://github.com/CAIsr/volgenmodel-nipype/archive/{{ context.volgenmodel_revision }}.tar.gz
 - name: beast
