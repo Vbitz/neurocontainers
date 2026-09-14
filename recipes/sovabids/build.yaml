@@ -178,6 +178,9 @@ build:
         - mesa-utils
         - libgl1-mesa-glx
         - spyder
+    - condition: arch == "aarch64"
+      install:
+        - build-essential
     - copy: sovabids.yml /opt/sovabids.yml
     - template:
         name: miniconda
