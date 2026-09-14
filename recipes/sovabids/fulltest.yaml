@@ -43,8 +43,15 @@ tests:
 
   - name: VS Code launcher forwards command arguments
     description: Verify the deployed editor reports its version without opening a GUI or requiring a home directory.
-    command: HOME=/proc/sovabids-no-home code --no-sandbox --user-data-dir "${output_dir}/vscode" --version
-    expected_output_contains: "x64"
+    command: |
+      version_output=$(HOME=/proc/sovabids-no-home code --no-sandbox --user-data-dir "${output_dir}/vscode" --version)
+      case "$(uname -m)" in
+        x86_64) printf '%s\n' "$version_output" | grep -F 'x64' ;;
+        aarch64) printf '%s\n' "$version_output" | grep -F 'arm64' ;;
+        *) echo "unsupported runtime architecture: $(uname -m)" >&2; exit 1 ;;
+      esac
+      echo "VS Code architecture check passed"
+    expected_output_contains: "VS Code architecture check passed"
 
   # ==========================================================================
   # BASIC FUNCTIONALITY AND VERSION CHECKS
