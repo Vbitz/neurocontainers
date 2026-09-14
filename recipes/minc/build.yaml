@@ -86,8 +86,10 @@ build:
       - libxi-dev
       - libxmu-dev
       - libxpm-dev
+      - libxrandr-dev
       - libxrender-dev
       - libxft-dev
+      - libxxf86vm-dev
       - octave
       - perl
       - unzip
