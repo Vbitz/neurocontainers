@@ -104,9 +104,15 @@ build:
         - install -m 0644 {{ get_file("pretrained_weights_peak_regression_part2_v2.npz") }} "$TRACTSEG_WEIGHTS_DIR/pretrained_weights_peak_regression_part2_v2.npz"
         - install -m 0644 {{ get_file("pretrained_weights_peak_regression_part3_v2.npz") }} "$TRACTSEG_WEIGHTS_DIR/pretrained_weights_peak_regression_part3_v2.npz"
         - install -m 0644 {{ get_file("pretrained_weights_peak_regression_part4_v2.npz") }} "$TRACTSEG_WEIGHTS_DIR/pretrained_weights_peak_regression_part4_v2.npz"
-    - template:
+    - condition: arch == "x86_64"
+      template:
         name: fsl
         version: 6.0.7.16
+        libtiff_package: libtiff5
+    - condition: arch == "aarch64"
+      template:
+        name: fsl
+        version: 6.0.7.22
         libtiff_package: libtiff5
     - user: jovyan
     - deploy:
