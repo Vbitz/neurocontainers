@@ -307,10 +307,10 @@ tests:
     command: romeo --help 2>&1
     expected_output_contains: "--phase-offset-correction"
 
-  - name: Help shows coil-combination alias
-    description: Verify help shows coil-combination as alias
+  - name: Help shows MCPC3Ds phase-offset correction
+    description: Verify help documents the current MCPC3Ds coil-combination path
     command: romeo --help 2>&1
-    expected_output_contains: "--coil-combination"
+    expected_output_contains: "activates MCPC3Ds phase offset correction"
 
   - name: Help shows bipolar correction option
     description: Verify help documents bipolar eddy current correction
@@ -346,9 +346,9 @@ tests:
     expected_output_contains: "--template TEMPLATE"
 
   - name: Help shows template default value
-    description: Verify help shows default template echo is 2
+    description: Verify help shows default template echo is 1
     command: romeo --help 2>&1
-    expected_output_contains: "default: 2"
+    expected_output_contains: "default: 1"
 
   - name: Help shows unwrap-echoes option
     description: Verify help documents selective echo unwrapping
