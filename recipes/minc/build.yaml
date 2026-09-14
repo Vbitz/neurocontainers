@@ -102,7 +102,7 @@ build:
       - rm -rf /tmp/minc-source /tmp/minc-build
       - git clone --recurse-submodules --depth 1 --branch release-1.9.18.4 https://github.com/BIC-MNI/minc-toolkit-v2.git /tmp/minc-source
       - mkdir -p /tmp/minc-build
-      - cmake -S /tmp/minc-source -B /tmp/minc-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/minc/{{ context.upstream_version }} -DMT_BUILD_ABC=ON -DMT_BUILD_ANTS=ON -DMT_BUILD_C3D=ON -DMT_BUILD_ELASTIX=ON -DMT_BUILD_ITK_TOOLS=ON -DMT_BUILD_SHARED_LIBS=ON -DMT_BUILD_VISUAL_TOOLS=ON -DMT_USE_OPENMP=ON -DUSE_SYSTEM_FFTW3D=OFF -DUSE_SYSTEM_FFTW3F=OFF -DUSE_SYSTEM_GLUT=OFF -DUSE_SYSTEM_GSL=OFF -DUSE_SYSTEM_HDF5=ON -DUSE_SYSTEM_ITK=OFF -DUSE_SYSTEM_NETCDF=OFF -DUSE_SYSTEM_NIFTI=OFF -DUSE_SYSTEM_PCRE=OFF -DUSE_SYSTEM_ZLIB=ON
+      - cmake -S /tmp/minc-source -B /tmp/minc-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/minc/{{ context.upstream_version }} -DMT_BUILD_ABC=ON -DMT_BUILD_ANTS=ON -DMT_BUILD_C3D=ON -DMT_BUILD_ELASTIX=ON -DMT_BUILD_ITK_TOOLS=ON -DMT_BUILD_SHARED_LIBS=ON -DMT_BUILD_VISUAL_TOOLS=ON -DMT_USE_OPENMP=ON -DUSE_SYSTEM_FFTW3D=OFF -DUSE_SYSTEM_FFTW3F=OFF -DUSE_SYSTEM_GLUT=OFF -DUSE_SYSTEM_GSL=OFF -DUSE_SYSTEM_HDF5=ON -DHDF5_INCLUDE_DIR=/usr/include/hdf5/serial -DHDF5_LIBRARY=/usr/lib/aarch64-linux-gnu/hdf5/serial/libhdf5.so -DUSE_SYSTEM_ITK=OFF -DUSE_SYSTEM_NETCDF=OFF -DUSE_SYSTEM_NIFTI=OFF -DUSE_SYSTEM_PCRE=OFF -DUSE_SYSTEM_ZLIB=ON
       - cmake --build /tmp/minc-build --parallel 4
       - cmake --install /tmp/minc-build
       - ln -s /opt/minc/{{ context.upstream_version }} /opt/minc-{{ context.upstream_version }}
