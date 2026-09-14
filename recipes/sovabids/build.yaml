@@ -213,7 +213,7 @@ build:
           /usr/lib/python3/dist-packages > "$site_packages/ubuntu-system-packages.pth"
         - >-
           /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
-          matplotlib ruamel.yaml coloredlogs multiecho nibabel pydeface drmaa
+          matplotlib ruamel.yaml coloredlogs multiecho nibabel pydeface drmaa debugpy
         - >-
           /opt/miniconda/envs/sovabids/bin/python -m pip install --no-cache-dir
           --no-deps git+https://github.com/yjmantilla/bidscoin.git@{{ context.bidscoin_commit }}
