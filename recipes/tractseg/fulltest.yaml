@@ -1,7 +1,8 @@
 # TractSeg container test suite
 # Tests for tractseg v2.9 - White matter bundle segmentation from Diffusion MRI
 #
-# TractSeg includes: MRtrix3 3.0.4, FSL 6.0.7.16, and TractSeg 2.9
+# TractSeg includes: MRtrix3 3.0.4, FSL 6.0.7.16 (x86_64) or 6.0.7.22
+# (ARM64), and TractSeg 2.9
 #
 # Note: The test data (ds000001) contains T1w and BOLD images but NOT diffusion
 # imaging data. Therefore, TractSeg-specific segmentation tests cannot run on
