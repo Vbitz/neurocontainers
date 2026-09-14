@@ -1,5 +1,5 @@
 # romeo container test suite
-# Tests for ROMEO v3.2.8 - Rapid Opensource Minimum Spanning Tree Algorithm for Phase Unwrapping
+# Tests for ROMEO v4.9.0 - Rapid Opensource Minimum Spanning Tree Algorithm for Phase Unwrapping
 #
 # ROMEO is a phase unwrapping algorithm for MRI data that uses a minimum spanning tree
 # approach to unwrap phase images. It supports both single-echo and multi-echo data,
@@ -21,7 +21,10 @@
 #   Magnetic Resonance in Medicine 79, 2996-3006. https://doi.org/10.1002/mrm.26963
 
 name: romeo
-version: 3.2.8
+version: 4.9.0
+
+env:
+  JULIA_PROJECT: /opt/romeo-${version}/share/julia
 
 required_files:
   - dataset: ds000001
@@ -117,7 +120,7 @@ tests:
   - name: Version check
     description: Verify romeo binary runs and reports version
     command: romeo --version 2>&1
-    expected_output_contains: "v${version}"
+    expected_output_contains: "${version}"
 
   - name: Help display
     description: Verify romeo shows help message with usage information
