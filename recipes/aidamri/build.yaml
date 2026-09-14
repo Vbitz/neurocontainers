@@ -89,11 +89,23 @@ build:
 
     - workdir: /opt/niftyreg-builder
 
-    - run:
+    - condition: arch == "x86_64"
+      run:
         - tar -xzf {{ get_file("niftyreg_tar") }} -C /opt/niftyreg-builder
         - mv niftyreg-{{ context.niftyreg_revision }} src
         - mkdir build
         - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg
+        - cd build
+        - make
+        - make install
+        - rm -rf /opt/niftyreg-builder
+
+    - condition: arch == "aarch64"
+      run:
+        - tar -xzf {{ get_file("niftyreg_tar") }} -C /opt/niftyreg-builder
+        - mv niftyreg-{{ context.niftyreg_revision }} src
+        - mkdir build
+        - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg -D USE_SSE=OFF
         - cd build
         - make
         - make install
