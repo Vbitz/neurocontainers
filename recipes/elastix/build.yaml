@@ -66,8 +66,20 @@ build:
         - cmake -S /tmp/elastix-src -B /tmp/elastix-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/{{ context.name }}-{{ context.version }} -DBUILD_TESTING=OFF -DELASTIX_USE_OPENCL=OFF -DITK_DIR=/opt/itk/lib/cmake/ITK-5.4
         - cmake --build /tmp/elastix-build --parallel 2
         - cmake --install /tmp/elastix-build
-        - ln -s /opt/{{ context.name }}-{{ context.version }}/bin/elastix /usr/local/bin/elastix
-        - ln -s /opt/{{ context.name }}-{{ context.version }}/bin/transformix /usr/local/bin/transformix
+        - |
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'export LD_LIBRARY_PATH="/opt/itk/lib:/opt/{{ context.name }}-{{ context.version }}/lib:${LD_LIBRARY_PATH:-}"' \
+            'exec /opt/{{ context.name }}-{{ context.version }}/bin/elastix "$@"' \
+            > /usr/local/bin/elastix
+          chmod +x /usr/local/bin/elastix
+        - |
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'export LD_LIBRARY_PATH="/opt/itk/lib:/opt/{{ context.name }}-{{ context.version }}/lib:${LD_LIBRARY_PATH:-}"' \
+            'exec /opt/{{ context.name }}-{{ context.version }}/bin/transformix "$@"' \
+            > /usr/local/bin/transformix
+          chmod +x /usr/local/bin/transformix
         - rm -rf /tmp/itk-src /tmp/itk-build /tmp/elastix-src /tmp/elastix-build
 
     - environment:
