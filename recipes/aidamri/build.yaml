@@ -118,7 +118,7 @@ build:
         - git -C src commit --allow-empty -m "Import NiftyReg {{ context.niftyreg_arm_version }}"
         - git -C src tag {{ context.niftyreg_arm_revision }}
         - mkdir build
-        - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg -D USE_SSE=OFF
+        - cmake -S src -B build -D CMAKE_INSTALL_PREFIX=/opt/aidamri-{{ context.version }}/NiftyReg -D USE_SSE=OFF -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_CXX_COMPILER=/usr/bin/g++
         - cd build
         - make
         - make install
