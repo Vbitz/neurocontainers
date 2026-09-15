@@ -61,6 +61,10 @@ build:
         - wget
 
     - condition: arch == "aarch64"
+      install:
+        - libpng-dev
+
+    - condition: arch == "aarch64"
       template:
         name: fsl
         version: "{{ context.fsl_arm_version }}"
