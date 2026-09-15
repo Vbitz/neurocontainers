@@ -45,7 +45,7 @@ tests:
   - name: DSI Studio version command
     description: Verify the bundled DSI Studio binary starts and reports its version
     command: /opt/aidamri-${version}/bin/dsi_studio_ubuntu2204/dsi-studio/dsi_studio --version
-    expected_output_contains: "DSI Studio version:"
+    expected_output_contains: "DSI Studio ("
 
   - name: FSL tools available
     description: Verify the bundled FSL tools are on PATH

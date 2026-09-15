@@ -147,7 +147,7 @@ build:
         arch: aarch64
         install_path: /opt/miniconda-4.7.12.1
         conda_install: python=3.10
-        pip_install: nipype==1.7.0 lmfit==1.0.3 progressbar33==2.4 nibabel
+        pip_install: nipype==1.7.0 traits==6.4.3 lmfit==1.0.3 progressbar33==2.4 nibabel
 
     - environment:
         FSLDIR: /opt/fsl-{{ context.fsl_version }}
