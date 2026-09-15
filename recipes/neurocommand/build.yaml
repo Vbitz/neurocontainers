@@ -18,6 +18,12 @@ variables:
   base_image_digest: sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
   apptainer_version: 1.4.4
   go_version: 1.23.6
+  conda_install:
+    try:
+      - value: "python=3.12 datalad"
+        condition: arch == "x86_64"
+      - value: "python=3.12"
+        condition: arch == "aarch64"
 
 auto_update:
   method: sources
@@ -132,8 +138,15 @@ build:
         name: miniconda
         version: latest
         install_path: /opt/miniconda
-        conda_install: python=3.12 datalad
+        conda_install: "{{ context.conda_install }}"
         pip_install: pandas nilearn matplotlib nipype osfclient
+
+    # The conda-forge ARM64 Datalad package depends on a git-annex package
+    # that is unavailable on linux-aarch64. Ubuntu already provides native
+    # git-annex above, so install Datalad from PyPI only on ARM64.
+    - condition: arch == "aarch64"
+      run:
+        - bash -c "source activate base && python -m pip install --no-cache-dir datalad"
 
     # Configure CVMFS - create directory structure
     - run:
