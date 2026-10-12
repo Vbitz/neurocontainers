@@ -54,3 +54,45 @@ tests:
       cat("MRS HTML report generated\n")
       RS
     expected_output_contains: MRS HTML report generated
+
+  - name: Analytical spectral fit
+    description: Fit two known MRS resonances through real VARPRO_3P and assert amplitudes, physical nuisance parameters, convergence and all spectral samples.
+    command: |
+      Rscript - <<'RS'
+      library(spant)
+      acq <- def_acq_paras(N = 256, fs = 512)
+      components <- sim_resonances(freq = c(30, 80), amp = c(1, 1), lw = 5,
+                                  freq_ppm = FALSE, acq_paras = acq,
+                                  fp_scale = FALSE, sum_resonances = FALSE)
+      basis <- mrs_data2basis(components, c("Peak30", "Peak80"))
+      signal <- sim_resonances(freq = c(30, 80), amp = c(2, 3), lw = 5,
+                              freq_ppm = FALSE, acq_paras = acq, fp_scale = FALSE)
+      t <- (seq_len(256) - 1) / 512
+      # Known -20 degree phase, +1.25 Hz shift and 2 Hz Gaussian broadening.
+      beta <- pi^2 * 2^2 / (4 * log(2))
+      signal$data <- signal$data * exp(-1i * 20 * pi / 180 + 2i * pi * 1.25 * t - beta * t^2)
+      data_before <- signal$data
+      basis_before <- basis$data
+      result <- fit_mrs(signal, basis, method = "VARPRO_3P",
+                        opts = varpro_3_para_opts(nstart = 1, init_damping = 2),
+                        parallel = FALSE, time = FALSE, progress = "none")
+      stopifnot(inherits(result, "fit_result"), identical(result$method, "VARPRO_3P"),
+                identical(signal$data, data_before), identical(basis$data, basis_before))
+      amplitudes <- fit_amps(result, append_common_1h_comb = FALSE)
+      stopifnot(identical(dim(amplitudes), c(1L, 2L)),
+                identical(colnames(amplitudes), c("Peak30", "Peak80")))
+      # Predeclared margin over double precision least-squares convergence scale (<1.5 ppm).
+      tolerance <- 100 * sqrt(.Machine$double.eps)
+      observed <- as.numeric(amplitudes[1, ])
+      stopifnot(all(is.finite(observed)), max(abs(observed - c(2, 3)) / c(2, 3)) < tolerance)
+      parameters <- c(result$res_tab$phase, result$res_tab$damping, result$res_tab$shift)
+      stopifnot(length(parameters) == 3L, all(is.finite(parameters)),
+                max(abs(parameters - c(20, 2, 1.25)) / c(20, 2, 1.25)) < tolerance,
+                result$res_tab$res.info %in% 1:4)
+      fit <- result$fits[[1]]
+      stopifnot(nrow(fit) == 512L, all(is.finite(fit$Data)), all(is.finite(fit$Fit)),
+                all(is.finite(fit$PPMScale)),
+                max(abs(fit$Data - fit$Fit)) / max(abs(fit$Data)) < tolerance)
+      cat("Actual spectral fit recovered both amplitudes, all nuisance parameters and every spectrum sample\n")
+      RS
+    expected_output_contains: Actual spectral fit recovered both amplitudes, all nuisance parameters and every spectrum sample
