@@ -457,8 +457,9 @@ tests:
            -o test_output/palm/pearson \
            -n 50 -ee -pearson \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/pearson_elapsed.csv
 
   # ==========================================================================
   # TFCE (Threshold-Free Cluster Enhancement)
@@ -472,8 +473,9 @@ tests:
            -o test_output/palm/tfce \
            -n 20 -ee -T \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/tfce_elapsed.csv
 
   - name: TFCE with custom parameters
     description: TFCE with custom H, E, C parameters
@@ -485,8 +487,9 @@ tests:
            -n 20 -ee -T \
            -tfce_H 2 -tfce_E 0.5 -tfce_C 6 \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/tfce_custom_elapsed.csv
 
   - name: TFCE 2D parameters
     description: TFCE with 2D preset (for surface/TBSS data)
@@ -497,8 +500,9 @@ tests:
            -o test_output/palm/tfce_2d \
            -n 20 -ee -T -tfce2D \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/tfce_2d_elapsed.csv
 
   # ==========================================================================
   # CLUSTER-BASED INFERENCE
@@ -512,8 +516,9 @@ tests:
            -o test_output/palm/cluster_extent \
            -n 20 -ee -C 3.1 -Cstat extent \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/cluster_extent_elapsed.csv
 
   - name: Cluster mass inference
     description: Cluster-based inference with mass statistic
@@ -524,8 +529,9 @@ tests:
            -o test_output/palm/cluster_mass \
            -n 20 -ee -C 3.1 -Cstat mass \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/cluster_mass_elapsed.csv
 
   # ==========================================================================
   # FDR CORRECTION
@@ -555,8 +561,9 @@ tests:
            -o test_output/palm/corrcon \
            -n 50 -ee -corrcon \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/corrcon_elapsed.csv
 
   # ==========================================================================
   # ACCELERATION METHODS
@@ -645,8 +652,9 @@ tests:
            -o test_output/palm/zstat \
            -n 50 -ee -zstat \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/zstat_elapsed.csv
 
   - name: Save DOF
     description: Save degrees of freedom file
@@ -830,8 +838,9 @@ tests:
            -o test_output/palm/nouncorr \
            -n 50 -ee -nouncorrected -T \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/nouncorr_elapsed.csv
 
   # ==========================================================================
   # PARTITION METHODS
@@ -872,8 +881,9 @@ tests:
            -o test_output/palm/precision_single \
            -n 50 -ee -precision single \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/precision_single_elapsed.csv
 
   - name: Double precision
     description: Use double precision for inputs
@@ -899,8 +909,9 @@ tests:
            -o test_output/palm/tfce_fdr \
            -n 20 -ee -T -fdr \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/tfce_fdr_elapsed.csv
 
   - name: Full analysis pipeline
     description: Comprehensive analysis with multiple corrections
@@ -914,8 +925,9 @@ tests:
            -save1-p \
            -saveglm -savedof \
            2>&1
-    ignore_exit_code: true
     expected_output_contains: "Reading input"
+    validate:
+      - output_exists: ${output_dir}/palm/full_analysis_elapsed.csv
 
   # ==========================================================================
   # SYNCHRONIZED PERMUTATIONS
