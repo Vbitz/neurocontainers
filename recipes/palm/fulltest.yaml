@@ -962,6 +962,20 @@ tests:
     validate:
       - output_exists: ${output_dir}/palm/savemax_elapsed.csv
 
+  - name: Analytical one-sample statistic and reproducibility
+    description: Four observations have means +/-1.5, sample SD 1 and standard error 0.5; require exact t=+/-3 and identical seeded permutation outputs.
+    command: |
+      set -eu
+      mkdir -p test_output/palm/analytical
+      printf '1,-1\n1,-1\n1,-1\n3,-3\n' > test_output/palm/analytical/input.csv
+      printf '1\n1\n1\n1\n' > test_output/palm/analytical/design.csv
+      printf '1\n' > test_output/palm/analytical/contrast.csv
+      palm -i test_output/palm/analytical/input.csv -d test_output/palm/analytical/design.csv -t test_output/palm/analytical/contrast.csv -n 16 -ise -seed 42 -precision double -o test_output/palm/analytical/run_a
+      palm -i test_output/palm/analytical/input.csv -d test_output/palm/analytical/design.csv -t test_output/palm/analytical/contrast.csv -n 16 -ise -seed 42 -precision double -o test_output/palm/analytical/run_b
+      octave --no-gui --quiet --eval "root='test_output/palm/analytical/'; suffixes={'_tstat.csv','_tstat_uncp.csv','_tstat_fwep.csv'}; for idx=1:numel(suffixes); first=dir([root 'run_a*' suffixes{idx}]); second=dir([root 'run_b*' suffixes{idx}]); assert(numel(first)==1 && numel(second)==1); first_path=[root first.name]; second_path=[root second.name]; values=csvread(first_path); assert(numel(values)==2 && all(isfinite(values(:)))); assert(strcmp(fileread(first_path),fileread(second_path))); if idx==1; assert(isequal(values(:)',[3,-3])); else; assert(all(values(:)>0 & values(:)<=1)); end; end; disp('Analytical PALM statistics and seeded outputs validated');"
+    expected_output_contains: Analytical PALM statistics and seeded outputs validated
+    timeout: 180
+
 cleanup:
   script: |
     #!/usr/bin/env bash
