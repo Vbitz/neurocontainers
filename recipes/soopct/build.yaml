@@ -111,6 +111,9 @@ build:
         - ln -sf /usr/lib/aarch64-linux-gnu/libstdc++.so.6 /opt/miniconda/lib/libstdc++.so.6
     - run:
         - python -m pip check
+        # Expose the unchanged bundled executable directly: its Python wrapper
+        # unconditionally chmods package files, which fails inside a read-only SIF.
+        - python -c 'import importlib.util, pathlib, sys; native = pathlib.Path(importlib.util.find_spec("niimath").origin).parent / "bin" / "niimath"; assert native.is_file(), native; native.chmod(native.stat().st_mode | 0o111); launcher = pathlib.Path(sys.executable).parent / "niimath"; assert launcher.is_file(), launcher; launcher.unlink(); launcher.symlink_to(native)'
     - run:
         - git clone https://github.com/rordenlab/soop-ct.git && git -C soop-ct checkout {{ context.upstream_commit }}
         - cd soop-ct

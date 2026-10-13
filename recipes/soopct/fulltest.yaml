@@ -92,9 +92,14 @@ tests:
     python -m pip check
     python - <<'PYTHON'
     from importlib.metadata import version
+    import importlib.util
+    from pathlib import Path
+    import shutil
     import platform
     import subprocess
     assert version('brainchop')=='${brainchop_version}'
+    native=Path(importlib.util.find_spec('niimath').origin).parent/'bin/niimath'
+    assert Path(shutil.which('niimath')).resolve()==native.resolve()
     if platform.machine()=='aarch64':
         assert version('antspyx')=='0.5.4'
         assert version('numpy')=='2.0.1'
