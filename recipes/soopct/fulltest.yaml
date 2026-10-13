@@ -1,97 +1,249 @@
 name: soopct
 version: 0.0.0
-
 test_data:
   output_dir: test_output/soopct
-
 setup:
   script: |
     set -e
     mkdir -p ${output_dir}
-
 tests:
-  - name: SOOP-CT scripts are installed
-    description: Verify the cloned SOOP-CT workflow scripts are available
-    command: |
-      set -e
-      test -f /soop-ct/1dcm2raw.py
-      test -f /soop-ct/2raw2best.py
-      test -f /soop-ct/3best2anon.py
-      test -f /soop-ct/4anon2bids.py
-      test -f /soop-ct/5bids2norm.py
-      echo "soopct scripts found"
-    expected_output_contains: "soopct scripts found"
+- name: SOOP-CT scripts are installed
+  description: Verify the cloned SOOP-CT workflow scripts are available
+  command: |
+    set -e
+    test -f /soop-ct/1dcm2raw.py
+    test -f /soop-ct/2raw2best.py
+    test -f /soop-ct/3best2anon.py
+    test -f /soop-ct/4anon2bids.py
+    test -f /soop-ct/5bids2norm.py
+    echo "soopct scripts found"
+  expected_output_contains: soopct scripts found
+- name: SOOP-CT Python dependencies import
+  description: Verify the scientific Python stack used by SOOP-CT imports
+  command: |
+    python - <<'PY'
+    import ants
+    import brainchop
+    import nibabel
+    import numpy
+    import scipy
+    print("soopct dependencies ok")
+    PY
+  expected_output_contains: soopct dependencies ok
+- name: dcm2niix converter available
+  description: Verify the DICOM converter called by 1dcm2raw.py is installed
+  command: dcm2niix -h 2>&1
+  expected_output_contains: Chris Rorden
+- name: Bundled sample DICOM conversion workflow
+  description: Run the DICOM conversion and best-image selection stages against the bundled SOOP-CT sample data
+  command: |
+    set -e
+    cd /soop-ct
+    python 1dcm2raw.py /soop-ct/DICOM "${output_dir}/raw"
+    python 2raw2best.py "${output_dir}/raw" "${output_dir}/best"
+    test -f "${output_dir}/best/3978620.nii"
+    test -f "${output_dir}/best/3978620.json"
+    echo "soopct conversion workflow ok"
+  expected_output_contains: soopct conversion workflow ok
+  timeout: 120
+- name: BrainChop runtime dependencies available
+  description: Verify the BrainChop CLI and TinyGrad compiler dependency are available
+  command: |
+    set -e
+    export HOME="/tmp/soopct-home"
+    export XDG_CACHE_HOME="/tmp/soopct-cache"
+    export MPLCONFIGDIR="/tmp/soopct-matplotlib"
+    mkdir -p "$HOME" "$XDG_CACHE_HOME" "$MPLCONFIGDIR"
+    command -v clang
+    command -v brainchop
+    brainchop --help > "${output_dir}/brainchop-help.txt" 2>&1
+    grep -F -- "--border" "${output_dir}/brainchop-help.txt"
+    grep -F -- "--no-optimize" "${output_dir}/brainchop-help.txt"
+    echo "brainchop runtime dependencies ok"
+  expected_output_contains: brainchop runtime dependencies ok
+- name: SOOP-CT BrainChop command matches current CLI
+  description: Verify 3best2anon.py calls BrainChop using the current positional-input CLI without running model inference
+  command: |
+    cd /soop-ct
+    python - <<'PY'
+    import importlib.util
+    from pathlib import Path
 
-  - name: SOOP-CT Python dependencies import
-    description: Verify the scientific Python stack used by SOOP-CT imports
-    command: |
-      python - <<'PY'
-      import ants
-      import brainchop
-      import nibabel
-      import numpy
-      import scipy
-      print("soopct dependencies ok")
-      PY
-    expected_output_contains: "soopct dependencies ok"
+    spec = importlib.util.spec_from_file_location("best2anon", "3best2anon.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
-  - name: dcm2niix converter available
-    description: Verify the DICOM converter called by 1dcm2raw.py is installed
-    command: dcm2niix -h 2>&1 | sed -n '1,8p'
-    expected_output_contains: "Chris Rorden"
+    captured = {}
+    def fake_run(cmd, check):
+        captured["cmd"] = [str(item) for item in cmd]
 
-  - name: Bundled sample DICOM conversion workflow
-    description: Run the DICOM conversion and best-image selection stages against the bundled SOOP-CT sample data
-    command: |
-      set -e
-      cd /soop-ct
-      python 1dcm2raw.py /soop-ct/DICOM "${output_dir}/raw"
-      python 2raw2best.py "${output_dir}/raw" "${output_dir}/best"
-      test -f "${output_dir}/best/3978620.nii"
-      test -f "${output_dir}/best/3978620.json"
-      echo "soopct conversion workflow ok"
-    expected_output_contains: "soopct conversion workflow ok"
-    timeout: 120
+    module.subprocess.run = fake_run
+    module.do_brainchop(Path("/tmp/input.nii"), Path("/tmp/output.nii"), True, 25)
+    cmd = captured["cmd"]
+    assert cmd[:2] == ["brainchop", "/tmp/input.nii"], cmd
+    assert "-i" not in cmd, cmd
+    assert "--border" in cmd, cmd
+    assert "--no-optimize" in cmd, cmd
+    print("soopct brainchop command ok")
+    PY
+  expected_output_contains: soopct brainchop command ok
+- name: Exact source and native dependency closure
+  command: |
+    python -m pip check
+    python - <<'PYTHON'
+    from importlib.metadata import version
+    import platform
+    import subprocess
+    assert version('brainchop')=='${brainchop_version}'
+    if platform.machine()=='aarch64':
+        assert version('antspyx')=='0.5.4'
+        assert version('numpy')=='2.0.1'
+    assert subprocess.check_output(['git','-C','/soop-ct','rev-parse','HEAD'],text=True).strip()=='${upstream_commit}'
+    print('SOOP-CT exact upstream source and compatible native dependencies verified')
+    PYTHON
+  expected_output_contains:
+  - No broken requirements found
+  - SOOP-CT exact upstream source and compatible native dependencies verified
+  expected_exit_code: 0
+- name: Native ANTs analytical identity resampling
+  description: Use the actual native ANTs affine transform and resampler on6783 nonconstant analytical voxels and exact physical
+    coordinates
+  command: |
+    python - <<'PYTHON'
+    import ants
+    import numpy as np
 
-  - name: BrainChop runtime dependencies available
-    description: Verify the BrainChop CLI and TinyGrad compiler dependency are available
-    command: |
-      set -e
-      export HOME="/tmp/soopct-home"
-      export XDG_CACHE_HOME="/tmp/soopct-cache"
-      export MPLCONFIGDIR="/tmp/soopct-matplotlib"
-      mkdir -p "$HOME" "$XDG_CACHE_HOME" "$MPLCONFIGDIR"
-      command -v clang
-      command -v brainchop
-      brainchop --help > "${output_dir}/brainchop-help.txt" 2>&1
-      grep -F -- "--border" "${output_dir}/brainchop-help.txt"
-      grep -F -- "--no-optimize" "${output_dir}/brainchop-help.txt"
-      echo "brainchop runtime dependencies ok"
-    expected_output_contains: "brainchop runtime dependencies ok"
+    shape=(17,19,21)
+    x,y,z=np.indices(shape)
+    data=(x*0.25+y*0.5-z*0.125).astype(np.float32)
+    origin=(7.0,-3.0,12.0);spacing=(1.5,2.0,2.5)
+    direction=np.array([[0,-1,0],[1,0,0],[0,0,1]],dtype=np.float64)
+    image=ants.from_numpy(data,origin=origin,spacing=spacing,direction=direction)
+    transform=ants.create_ants_transform(transform_type='AffineTransform',dimension=3)
+    result=ants.apply_ants_transform_to_image(transform,image,image,interpolation='nearestNeighbor')
+    np.testing.assert_array_equal(result.numpy(),data)
+    np.testing.assert_array_equal(result.origin,origin)
+    np.testing.assert_array_equal(result.spacing,spacing)
+    np.testing.assert_array_equal(result.direction,direction)
+    np.testing.assert_array_equal(image.numpy(),data)
+    points=np.array([[0,0,0],[1.5,4,-2.5],[-12,8,3]],dtype=np.float64)
+    for point in points:np.testing.assert_array_equal(ants.apply_ants_transform_to_point(transform,point),point)
+    print('Native ANTs identity resampling preserved all6783 voxel values, physical geometry and transformed points')
+    PYTHON
+  timeout: 120
+  expected_output_contains: Native ANTs identity resampling preserved all6783 voxel values, physical geometry and transformed
+    points
+  expected_exit_code: 0
+- name: Analytical group-average NIfTI operation
+  description: Run the real nii2mean.py CLI on3 known volumes and require every1287 mean voxel and physical header field exactly
+  command: |
+    python - <<'PYTHON'
+    import hashlib
+    from pathlib import Path
+    import subprocess
+    import sys
+    import tempfile
+    import nibabel as nib
+    import numpy as np
 
-  - name: SOOP-CT BrainChop command matches current CLI
-    description: Verify 3best2anon.py calls BrainChop using the current positional-input CLI without running model inference
-    command: |
-      cd /soop-ct
-      python - <<'PY'
-      import importlib.util
-      from pathlib import Path
+    with tempfile.TemporaryDirectory(dir=Path('${output_dir}').resolve()) as directory:
+        root=Path(directory)
+        affine=np.array([[1.5,0,0,-12],[0,2.0,0,7],[0,0,2.5,3],[0,0,0,1]],dtype=np.float64)
+        base=np.arange(9*11*13,dtype=np.float32).reshape((9,11,13))
+        inputs=[base-800,base*0.5-600,base*1.5-400]
+        hashes={}
+        for index,data in enumerate(inputs):
+            path=root/f'{index}_ct.nii.gz'
+            image=nib.Nifti1Image(data,affine)
+            image.set_qform(affine,1);image.set_sform(affine,1)
+            image.header.set_xyzt_units('mm','sec')
+            nib.save(image,path);hashes[path]=hashlib.sha256(path.read_bytes()).hexdigest()
+        output=root/'mean.nii.gz'
+        subprocess.run([sys.executable,'/soop-ct/nii2mean.py',str(root),'_ct.nii.gz',str(output)],check=True)
+        result=nib.load(output)
+        expected=(inputs[0]+inputs[1]+inputs[2])/np.float32(3)
+        np.testing.assert_array_equal(np.asanyarray(result.dataobj),expected)
+        np.testing.assert_array_equal(result.affine,affine)
+        np.testing.assert_array_equal(result.header.get_zooms(),[1.5,2,2.5])
+        assert result.header.get_xyzt_units()==('mm','sec')
+        assert int(result.header['qform_code'])==int(result.header['sform_code'])==1
+        assert all(hashlib.sha256(path.read_bytes()).hexdigest()==digest for path,digest in hashes.items())
+        print('SOOP-CT group mean preserved all1287 analytical voxels, physical geometry and input bytes')
+    PYTHON
+  timeout: 120
+  expected_output_contains: SOOP-CT group mean preserved all1287 analytical voxels, physical geometry and input bytes
+  expected_exit_code: 0
+- name: Actual CT model inference and BIDS conversion
+  description: Run the unchanged official trained mindgrab network on the bundled clinical CT through3best2anon.py, then4anon2bids.py;
+    require actual finite nonconstant image, crop geometry, acquisition-time removal, exact image/JSON copies and unchanged
+    input/model bytes. Optional SynthSR normalization and clinical privacy efficacy are outside this operation
+  command: |
+    python - <<'PYTHON'
+    import csv
+    import hashlib
+    import json
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+    import tempfile
+    import urllib.request
+    import nibabel as nib
+    import numpy as np
 
-      spec = importlib.util.spec_from_file_location("best2anon", "3best2anon.py")
-      module = importlib.util.module_from_spec(spec)
-      spec.loader.exec_module(module)
-
-      captured = {}
-      def fake_run(cmd, check):
-          captured["cmd"] = [str(item) for item in cmd]
-
-      module.subprocess.run = fake_run
-      module.do_brainchop(Path("/tmp/input.nii"), Path("/tmp/output.nii"), True, 25)
-      cmd = captured["cmd"]
-      assert cmd[:2] == ["brainchop", "/tmp/input.nii"], cmd
-      assert "-i" not in cmd, cmd
-      assert "--border" in cmd, cmd
-      assert "--no-optimize" in cmd, cmd
-      print("soopct brainchop command ok")
-      PY
-    expected_output_contains: "soopct brainchop command ok"
+    # Use the actual public trained mindgrab network on the bundled clinical CT.
+    # This is runtime/output consistency proof, not clinical privacy validation.
+    best=Path('${output_dir}').resolve()/'best'
+    source=best/'3978620.nii';sidecar=best/'3978620.json'
+    hashes={path:hashlib.sha256(path.read_bytes()).hexdigest() for path in [source,sidecar]}
+    original=nib.load(source);original_data=np.asanyarray(original.dataobj)
+    assert original_data.ndim==3 and np.isfinite(original_data).all() and np.ptp(original_data)>0
+    with tempfile.TemporaryDirectory(dir=Path('${output_dir}').resolve()) as directory:
+        root=Path(directory);home=root/'home';cache=home/'.cache/brainchop'
+        assets={'listing': {'url': 'https://raw.githubusercontent.com/neuroneural/brainchop-cli/51a95a6a1f84546a317aabe171b29f34e093b970/models.json', 'sha256': 'd2081bfc952f22938186c38e8c8c971c940714d9b2a7fd67c14756a0eb41415c', 'bytes': 1282}, 'config': {'url': 'https://raw.githubusercontent.com/neuroneural/brainchop-models/528f2d8d2ca937968b2d4b2b9ef9fa9170f4b9cf/meshnet/mindgrab/model.json', 'sha256': 'e321f27014eb05f187667873d5301be57f9aac4c5be427e68e9f484748d643fd', 'bytes': 3980}, 'weights': {'url': 'https://raw.githubusercontent.com/neuroneural/brainchop-models/528f2d8d2ca937968b2d4b2b9ef9fa9170f4b9cf/meshnet/mindgrab/model.pth', 'sha256': '31f1bda17b8d3eee17a54cf3f199899763a6615a049f05ab2a05f18eb98ec23a', 'bytes': 595371}}
+        destinations={'listing':cache/'models.json','config':cache/'models/mindgrab/model.json','weights':cache/'models/mindgrab/model.pth'}
+        for name,metadata in assets.items():
+            path=destinations[name];path.parent.mkdir(parents=True,exist_ok=True)
+            with urllib.request.urlopen(metadata['url'],timeout=120) as response:data=response.read()
+            assert len(data)==metadata['bytes'] and hashlib.sha256(data).hexdigest()==metadata['sha256'],name
+            path.write_bytes(data)
+        env=os.environ.copy();env.update(HOME=str(home),XDG_CACHE_HOME=str(home/'.cache'),MPLCONFIGDIR=str(home/'matplotlib'),CPU='1',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
+        anon=root/'anon';bids=root/'bids'
+        subprocess.run([sys.executable,'/soop-ct/3best2anon.py',str(best),str(anon)],env=env,check=True,timeout=1800)
+        images=sorted(anon.glob('*_ct.nii*'));assert len(images)==1,images
+        output=images[0];assert output.name in ['1_ct.nii','1_ct.nii.gz'],output
+        image=nib.load(output);data=np.asanyarray(image.dataobj)
+        assert data.ndim==3 and all(0<n<=old for n,old in zip(data.shape,original_data.shape))
+        assert np.isfinite(data).all() and np.ptp(data)>0
+        assert np.count_nonzero(data>-999)>1000
+        np.testing.assert_array_equal(image.header.get_zooms(),original.header.get_zooms())
+        np.testing.assert_array_equal(image.affine[:3,:3],original.affine[:3,:3])
+        if image.shape==original.shape:
+            np.testing.assert_array_equal(image.affine,original.affine)
+        else:
+            expected_center=-(image.affine[:3,:3]@((np.array(image.shape)-1)/2))
+            # NIfTI1 stores affine translations as float32.
+            precision=4*np.finfo(np.float32).eps*max(1,float(np.max(np.abs(expected_center))))
+            np.testing.assert_allclose(image.affine[:3,3],expected_center,rtol=0,atol=precision)
+        metadata=json.loads((anon/'1_ct.json').read_text());reference=json.loads(sidecar.read_text());reference.pop('AcquisitionTime',None)
+        assert metadata==reference and 'AcquisitionTime' not in metadata
+        with (anon/'lookup.tsv').open() as stream:rows=list(csv.reader(stream,delimiter='\t'))
+        assert rows==[['original_name','anonymized_name'],['3978620','1_ct']],rows
+        subprocess.run([sys.executable,'/soop-ct/4anon2bids.py',str(anon),str(bids)],env=env,check=True)
+        copied=bids/'sub-1/ct'/('sub-1_ct.nii.gz' if output.name.endswith('.gz') else 'sub-1_ct.nii')
+        assert copied.read_bytes()==output.read_bytes()
+        assert (bids/'sub-1/ct/sub-1_ct.json').read_bytes()==(anon/'1_ct.json').read_bytes()
+        desc=json.loads((bids/'dataset_description.json').read_text());assert desc['BIDSVersion']=='1.8.0' and desc['DatasetType']=='raw'
+        assert (bids/'participants.tsv').read_text()=='participant_id\n'
+        assert 'participant_id' in json.loads((bids/'participants.json').read_text())
+        assert all(hashlib.sha256(path.read_bytes()).hexdigest()==digest for path,digest in hashes.items())
+        assert all(hashlib.sha256(destinations[name].read_bytes()).hexdigest()==metadata['sha256'] for name,metadata in assets.items())
+        print('Actual SOOP-CT mindgrab CPU inference produced nontrivial cropped CT, sanitized acquisition time, preserved exact BIDS image/sidecar bytes and left all source/model bytes unchanged')
+    PYTHON
+  timeout: 2100
+  expected_output_contains: Actual SOOP-CT mindgrab CPU inference produced nontrivial cropped CT, sanitized acquisition time,
+    preserved exact BIDS image/sidecar bytes and left all source/model bytes unchanged
+  expected_exit_code: 0
+upstream_commit: 9c9d56da66590e9daf6943ee91a18b3d72312c02
+brainchop_version: 0.2.5
+env_setup: set -euo pipefail
