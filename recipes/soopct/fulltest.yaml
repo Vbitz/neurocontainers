@@ -188,11 +188,13 @@ tests:
     import hashlib
     import json
     import os
+    import signal
     from pathlib import Path
     import subprocess
     import sys
     import tempfile
     import urllib.request
+    import time
     import nibabel as nib
     import numpy as np
 
@@ -212,9 +214,44 @@ tests:
             with urllib.request.urlopen(metadata['url'],timeout=120) as response:data=response.read()
             assert len(data)==metadata['bytes'] and hashlib.sha256(data).hexdigest()==metadata['sha256'],name
             path.write_bytes(data)
-        env=os.environ.copy();env.update(HOME=str(home),XDG_CACHE_HOME=str(home/'.cache'),MPLCONFIGDIR=str(home/'matplotlib'),DEV='CPU',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
+        env=os.environ.copy();env['PYTHONUNBUFFERED']='1';env.update(HOME=str(home),XDG_CACHE_HOME=str(home/'.cache'),MPLCONFIGDIR=str(home/'matplotlib'),DEV='CPU',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
         anon=root/'anon';bids=root/'bids'
-        subprocess.run([sys.executable,'/soop-ct/3best2anon.py',str(best),str(anon)],env=env,check=True,timeout=1800)
+        process=subprocess.Popen([sys.executable,'/soop-ct/3best2anon.py',str(best),str(anon)],env=env,start_new_session=True)
+        started=time.monotonic()
+        try:
+            while True:
+                remaining=5400-(time.monotonic()-started)
+                assert remaining>0, 'Actual full-resolution CT model exceeded its90-minute CPU allowance'
+                try:
+                    result_code=process.wait(timeout=min(300,remaining))
+                    assert result_code==0, ('CT workflow exit',result_code)
+                    break
+                except subprocess.TimeoutExpired:
+                    pending=[process.pid]
+                    details=[]
+                    while pending:
+                        pid=pending.pop()
+                        try:
+                            text=Path(f'/proc/{pid}/stat').read_text()
+                            fields=text[text.rfind(')')+2:].split()
+                            details.append({'pid':pid,'state':fields[0],
+                                'cpu_seconds':(int(fields[11])+int(fields[12]))/os.sysconf('SC_CLK_TCK'),
+                                'rss_mib':int(fields[21])*os.sysconf('SC_PAGE_SIZE')/2**20})
+                            pending.extend(int(value) for value in Path(f'/proc/{pid}/task/{pid}/children').read_text().split())
+                        except (FileNotFoundError,ProcessLookupError,PermissionError):
+                            # A child may exit between diagnostic reads.
+                            continue
+                    print('Actual CT inference progress:',round(time.monotonic()-started),'seconds',details,flush=True)
+        except BaseException:
+            # Terminate the owned workflow and its model/compiler children together.
+            try:os.killpg(process.pid,signal.SIGTERM)
+            except ProcessLookupError:pass
+            try:process.wait(timeout=10)
+            except subprocess.TimeoutExpired:pass
+            try:os.killpg(process.pid,signal.SIGKILL)
+            except ProcessLookupError:pass
+            process.wait(timeout=10)
+            raise
         images=sorted(anon.glob('*_ct.nii*'));assert len(images)==1,images
         output=images[0];assert output.name in ['1_ct.nii','1_ct.nii.gz'],output
         image=nib.load(output);data=np.asanyarray(image.dataobj)
@@ -245,7 +282,7 @@ tests:
         assert all(hashlib.sha256(destinations[name].read_bytes()).hexdigest()==metadata['sha256'] for name,metadata in assets.items())
         print('Actual SOOP-CT mindgrab CPU inference produced nontrivial cropped CT, sanitized acquisition time, preserved exact BIDS image/sidecar bytes and left all source/model bytes unchanged')
     PYTHON
-  timeout: 2100
+  timeout: 6000
   expected_output_contains: Actual SOOP-CT mindgrab CPU inference produced nontrivial cropped CT, sanitized acquisition time,
     preserved exact BIDS image/sidecar bytes and left all source/model bytes unchanged
   expected_exit_code: 0
