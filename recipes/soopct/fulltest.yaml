@@ -212,7 +212,7 @@ tests:
             with urllib.request.urlopen(metadata['url'],timeout=120) as response:data=response.read()
             assert len(data)==metadata['bytes'] and hashlib.sha256(data).hexdigest()==metadata['sha256'],name
             path.write_bytes(data)
-        env=os.environ.copy();env.update(HOME=str(home),XDG_CACHE_HOME=str(home/'.cache'),MPLCONFIGDIR=str(home/'matplotlib'),CPU='1',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
+        env=os.environ.copy();env.update(HOME=str(home),XDG_CACHE_HOME=str(home/'.cache'),MPLCONFIGDIR=str(home/'matplotlib'),DEV='CPU',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
         anon=root/'anon';bids=root/'bids'
         subprocess.run([sys.executable,'/soop-ct/3best2anon.py',str(best),str(anon)],env=env,check=True,timeout=1800)
         images=sorted(anon.glob('*_ct.nii*'));assert len(images)==1,images
