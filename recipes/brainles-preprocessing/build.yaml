@@ -70,6 +70,8 @@ build:
         - git
         - wget
         - ca-certificates
+        # Package-provided x86 NiftyReg requires the GCC OpenMP runtime.
+        - libgomp1
         - unzip
 
     - condition: arch == "aarch64"

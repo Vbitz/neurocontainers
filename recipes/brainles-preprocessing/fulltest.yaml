@@ -234,6 +234,7 @@ tests:
       import importlib.metadata as md
       import platform
       import struct
+      import subprocess
       from pathlib import Path
       import brainles_preprocessing
       import torch
@@ -245,6 +246,8 @@ tests:
           with path.open('rb') as f: header=f.read(20)
           assert header[:4]==b'\x7fELF' and header[5]==1
           assert struct.unpack('<H',header[18:20])[0]==expected,(name,header)
+          linked=subprocess.run(['ldd',str(path)],capture_output=True,text=True,check=True)
+          assert 'not found' not in linked.stdout+linked.stderr,(name,linked.stdout,linked.stderr)
           if expected==183:
               assert path.is_symlink() and path.resolve()==Path('/opt/brainles-niftyreg-${niftyreg_version}/bin')/name
       if expected==183:
