@@ -1,5 +1,8 @@
 name: synthstroke
 version: 0.0.0
+upstream_commit: f627b57b8f9291bfa870cb54cb21ddbeb4941d39
+baseline_model_commit: b693a650026359705688fbce409219c4dbb5d6be
+arm_torch_version: "2.6.0"
 tests:
 - name: SynthStroke launcher
   command: synthstroke --help
@@ -9,3 +12,68 @@ tests:
   command: command -v synthstroke-download
   expected_exit_code: 0
   expected_output_contains: synthstroke-download
+
+- name: Full pretrained baseline MRI inference and physical output contract
+  description: >-
+    Run the bundled author-provided baseline on the complete official197x233x189
+    MPRAGE image, default CPU preprocessing/sliding-window inference and unchanged
+    model. Reopen all probability/class/mask outputs; verify physical grids,
+    complementary finite probabilities, exact argmax/threshold masks and all
+    input/checkpoint bytes. Healthy MRI runtime evidence, no stroke accuracy,
+    other model variants, training, GPU or optional TTA claim.
+  command: |
+    python - <<'PYTHON'
+    import hashlib
+    import json
+    import os
+    from pathlib import Path
+    import platform
+    import subprocess
+    import sys
+    import tempfile
+    import urllib.request
+    import nibabel as nib
+    import numpy as np
+    import torch
+
+    def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+    assert subprocess.check_output(['git','-C','/opt/synthstroke','rev-parse','HEAD'],text=True).strip()=='${upstream_commit}'
+    subprocess.run([sys.executable,'-m','pip','check'],check=True)
+    if platform.machine()=='aarch64':
+        assert torch.__version__=='${arm_torch_version}+cpu' and torch.version.cuda is None
+    weights=Path('/opt/synthstroke/weights/baseline');checkpoint=weights/'model.safetensors';config=weights/'config.json'
+    before={p.name:digest(p) for p in [checkpoint,config]}
+    assert json.loads(config.read_text())['out_channels']==2
+    with tempfile.TemporaryDirectory(prefix='synthstroke-full-mri-') as directory:
+        root=Path(directory);source=root/'mprage_img.nii'
+        url='https://raw.githubusercontent.com/liamchalcroft/SynthStroke/${upstream_commit}/test_data/mprage_img.nii'
+        with urllib.request.urlopen(url,timeout=120) as response: source.write_bytes(response.read())
+        expected='0b3663c9be421dabec6784800edadbf6552118231761682032776fbd13ecea8e'
+        assert digest(source)==expected
+        original=nib.load(source);assert original.shape==(197,233,189)
+        output=root/'output'
+        env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='2',MKL_NUM_THREADS='2',HF_HUB_OFFLINE='1',MPLCONFIGDIR=str(root/'mpl'),XDG_CACHE_HOME=str(root/'cache'))
+        subprocess.run(['synthstroke','--input',str(source),'--outdir',str(output)],env=env,check=True,timeout=7200)
+        def read(name):
+            image=nib.load(output/name)
+            assert image.shape==original.shape
+            np.testing.assert_array_equal(image.affine,original.affine)
+            np.testing.assert_array_equal(image.header.get_zooms(),original.header.get_zooms())
+            data=np.asanyarray(image.dataobj);assert np.isfinite(data).all()
+            return data
+        background=read('prediction_prob_class_0.nii.gz');lesion=read('prediction_prob_class_1.nii.gz')
+        for probability in [background,lesion]:
+            assert probability.min()>=0 and probability.max()<=1
+            assert probability.min()<probability.max()
+        np.testing.assert_allclose(background+lesion,1,rtol=0,atol=8*np.finfo(np.float32).eps)
+        predicted=read('prediction_prediction.nii.gz');mask=read('prediction_lesion_mask.nii.gz')
+        np.testing.assert_array_equal(predicted,(lesion>background).astype(np.int16))
+        np.testing.assert_array_equal(mask,(lesion>0.5).astype(np.uint8))
+        assert set(np.unique(mask)).issubset({0,1}) and int(mask.sum())<mask.size
+        assert digest(source)==expected
+        assert {p.name:digest(p) for p in [checkpoint,config]}==before
+        print('Full trained SynthStroke MRI inference passed '+json.dumps({'shape':list(original.shape),'lesion_voxels':int(mask.sum()),'lesion_probability_range':[float(lesion.min()),float(lesion.max())],'input_sha256':expected,'model_sha256':before,'model_commit':'${baseline_model_commit}','mode':'default CPU baseline, no TTA','clinical_accuracy_unverified':True},sort_keys=True))
+    PYTHON
+  expected_exit_code: 0
+  expected_output_contains: Full trained SynthStroke MRI inference passed
+  timeout: 7500
